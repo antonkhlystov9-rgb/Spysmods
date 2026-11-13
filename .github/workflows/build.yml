@@ -30,7 +30,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run dist
+      - name: Build installers
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run dist 2>&1 | tee build.log
+          # the app must ship with its own icon, never Electron's default one
+          if grep -qi "default Electron icon is used" build.log; then echo "::error::The app icon was not applied"; exit 1; fi
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}

@@ -82,7 +82,7 @@
     const s = S(), fresh = !s.stats.placed && s.stats.playTime < 5, done = TH.shelvedCount() === NB;
     const label = done ? 'Wander the finished library' : fresh ? 'Start the night shift' : `Continue — ${TH.shelvedCount()} of ${NB} shelved`;
     return `<div class="title">
-      <div class="logo"><h1>The Night <span>Shelver</span></h1><p>a cozy library organizing game</p></div>
+      <div class="logo"><img src="icon.png" alt=""><div><h1>The Night <span>Shelver</span></h1><p>a cozy library organizing game</p></div></div>
       <div class="title-menu">
         <button class="btn big primary wide" data-act="enter">${ico('play')} ${esc(label)}</button>
         <button class="btn" data-act="go" data-to="catalog">${ico('book')} Card Catalogue</button>

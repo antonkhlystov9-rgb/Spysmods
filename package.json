@@ -33,11 +33,16 @@
       "target": [
         "nsis",
         "portable"
-      ]
+      ],
+      "icon": "build/icon.ico"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     },
     "portable": {
       "artifactName": "NightShelver-Portable-${version}.exe"
@@ -46,13 +51,15 @@
       "target": [
         "AppImage"
       ],
-      "category": "Game"
+      "category": "Game",
+      "icon": "build/icon.png"
     },
     "mac": {
       "target": [
         "dmg"
       ],
-      "category": "public.app-category.puzzle-games"
+      "category": "public.app-category.puzzle-games",
+      "icon": "build/icon.png"
     }
   }
 }

@@ -224,3 +224,6 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 1.5re
 #tip { top: 12.2rem; }
 .touch-only { display: none; font-weight: 800; }
 .touch .touch-only { display: inline-flex; }
+.logo { display: flex; align-items: center; gap: 1.6rem; text-align: left; }
+.logo img { width: 7.2rem; height: 7.2rem; flex: none; border-radius: 1.5rem; }
+.logo h1 { font-size: 4.2rem; }

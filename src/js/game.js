@@ -15,14 +15,14 @@
 
   const G = TH.Game = { mode: 'menu', paused: false, locked: false, held: [], aim: null, fx: { golden: 0, way: 0 }, streak: 0, keys: {} };
   let cv, renderer, scene, camera, handScene, handCam, handGroup;
-  let cover, pages, hemi, sun, winMat, lampMat, dust, sparks, hlBook, hlRow, ghost;
+  let cover, pages, handCover, handPages, hemi, sun, winMat, lampMat, dust, sparks, hlBook, hlRow, ghost;
   const lamps = [], halos = [], books = [], piles = [], cases = [], colliders = [], gates = [], marks = [], anims = [], handMeshes = [], beacons = [];
   const P = { x: 0.75, z: 0, yaw: -Math.PI / 2, pitch: 0 };
   let dirty = false, clock = 0, last = 0, lastDraw = 0, fpsT = 0, fpsN = 0, bob = 0, stepPhase = 0, pending = 0;
   let mouseDown = false, repeatT = 0, lastOk = false, aimKey = '', aaOn = null, saveT = 0, lastWing = -1;
   const stick = { x: 0, y: 0 }, touches = {};
 
-  const _m = new T.Matrix4(), _s = new T.Vector3(), _v = new T.Vector3(), _v2 = new T.Vector3(), _q = new T.Quaternion();
+  const _m = new T.Matrix4(), _s = new T.Vector3(), _v = new T.Vector3(), _v2 = new T.Vector3(), _hv = new T.Vector3(), _q = new T.Quaternion();
   const Y_AXIS = new T.Vector3(0, 1, 0), Q_FLAT = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 0, 1), Math.PI / 2);
   const calm = () => TH.Settings.video.reduceMotion;
   const cap = () => TH.upgVal('satchel');
@@ -66,16 +66,118 @@
     for (let i = 0; i < 9; i++) { x.save(); x.translate(64 + i * 48, 80); x.rotate(Math.PI / 4); x.fillRect(-11, -11, 22, 22); x.restore(); }
     return new T.CanvasTexture(c);
   }
-  function spineTexture() {
-    const c = document.createElement('canvas'); c.width = 64; c.height = 256;
+  // ---------- readable books ----------
+  // One 384x384 tile per series in a 4096 atlas: a 96px-wide spine and a 288px-wide front cover, in the series' own colours.
+  // The volume numeral is a second small texture that the shader stamps onto each book.
+  const BLK = 384, ATLAS = 4096, ACOLS = 10, SU = BLK / ATLAS, SERIF = 'Georgia, "Times New Roman", serif';
+  function fitLines(x, text, maxW, maxH, maxSize, minSize, weight) {
+    const words = text.split(' ');
+    for (let size = maxSize; size >= minSize; size -= 1) {
+      x.font = `${weight} ${size}px ${SERIF}`;
+      const lines = []; let cur = '';
+      for (const w of words) { const t = cur ? cur + ' ' + w : w; if (cur && x.measureText(t).width > maxW) { lines.push(cur); cur = w; } else cur = t; }
+      lines.push(cur);
+      if (lines.length * size * 1.16 <= maxH && lines.every((l) => x.measureText(l).width <= maxW)) return { lines, size };
+    }
+    return { lines: [text], size: minSize };
+  }
+  function bookAtlas() {
+    const c = document.createElement('canvas'); c.width = c.height = ATLAS;
     const x = c.getContext('2d');
-    x.fillStyle = '#d2d2d2'; x.fillRect(0, 0, 64, 256);
-    x.fillStyle = '#ffffff'; x.fillRect(0, 26, 64, 10); x.fillRect(0, 220, 64, 10);
-    x.fillStyle = '#9a9a9a'; x.fillRect(0, 40, 64, 3); x.fillRect(0, 214, 64, 3);
-    x.fillStyle = '#f6f6f6'; x.fillRect(12, 64, 40, 54);
-    x.strokeStyle = '#8c8c8c'; x.lineWidth = 3; x.strokeRect(12, 64, 40, 54);
-    x.fillStyle = '#9a9a9a'; x.fillRect(20, 80, 24, 4); x.fillRect(20, 92, 24, 4);
-    return new T.CanvasTexture(c);
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    for (const se of TH.SERIES) {
+      const bx = (se.id % ACOLS) * BLK, by = Math.floor(se.id / ACOLS) * BLK, cat = TH.CATS[se.cat].name.toUpperCase();
+      const rgb = [1, 3, 5].map((i) => parseInt(se.color.slice(i, i + 2), 16)), light = (rgb[0] * 0.3 + rgb[1] * 0.59 + rgb[2] * 0.11) > 118;
+      const ink = light ? '#2b1c10' : '#fdeec8', line = light ? 'rgba(43,28,16,.75)' : 'rgba(253,238,200,.8)', plate = TH.mix(se.color, '#000000', 0.62);
+      x.fillStyle = se.color; x.fillRect(bx, by, BLK, BLK);
+      const plateAt = (px, py, pw, ph) => { x.fillStyle = plate; x.beginPath(); x.roundRect(px, py, pw, ph, 6); x.fill(); x.strokeStyle = '#fdeec8'; x.lineWidth = 2; x.stroke(); };
+      // spine
+      x.fillStyle = TH.mix(se.color, '#000000', 0.22); x.fillRect(bx, by, 96, 10); x.fillRect(bx, by + 374, 96, 10);
+      x.fillStyle = line; x.fillRect(bx + 6, by + 50, 84, 3); x.fillRect(bx + 6, by + 56, 84, 1.5); x.fillRect(bx + 6, by + 296, 84, 3); x.fillRect(bx + 6, by + 290, 84, 1.5);
+      x.fillStyle = ink;
+      let fs = 15; do { x.font = `bold ${fs}px ${SERIF}`; fs -= 1; } while (x.measureText(cat).width > 84 && fs > 8);
+      x.fillText(cat, bx + 48, by + 31);
+      x.save(); x.translate(bx + 48, by + 174); x.rotate(Math.PI / 2);
+      const st = fitLines(x, se.name, 214, 80, 46, 15, 'bold');
+      st.lines.forEach((l, i) => x.fillText(l, 0, (i - (st.lines.length - 1) / 2) * st.size * 1.12 + 2));
+      x.restore();
+      plateAt(bx + 11.5, by + 311, 73, 50);
+      // front cover
+      const ox = bx + 96;
+      x.strokeStyle = line; x.lineWidth = 3; x.strokeRect(ox + 15, by + 15, 258, 354); x.lineWidth = 1.5; x.strokeRect(ox + 23, by + 23, 242, 338);
+      x.fillStyle = ink; x.font = `bold 17px ${SERIF}`; x.fillText(cat.split('').join(' '), ox + 144, by + 52);
+      x.fillStyle = line; x.fillRect(ox + 94, by + 68, 100, 2);
+      x.fillStyle = ink;
+      const ct = fitLines(x, se.name, 216, 150, 42, 20, 'bold');
+      ct.lines.forEach((l, i) => x.fillText(l, ox + 144, by + 152 + (i - (ct.lines.length - 1) / 2) * ct.size * 1.16));
+      x.save(); x.translate(ox + 144, by + 244); x.rotate(Math.PI / 4); x.fillStyle = line; x.fillRect(-6, -6, 12, 12); x.restore();
+      x.fillStyle = ink; x.font = `bold 12px ${SERIF}`; x.fillText('V O L U M E', ox + 144, by + 263);
+      plateAt(ox + 98, by + 273, 92, 46);
+      x.font = `italic 12px ${SERIF}`; x.fillText('Emberwick Library', ox + 144, by + 343);
+    }
+    const t = new T.CanvasTexture(c); t.anisotropy = 8;
+    return t;
+  }
+  function numeralTexture() {
+    const c = document.createElement('canvas'); c.width = 2048; c.height = 64;      // 16 slots of 128px, 12 used
+    const x = c.getContext('2d');
+    x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#fdeec8';
+    TH.ROMAN.forEach((r, i) => { let fs = 46; do { x.font = `bold ${fs}px ${SERIF}`; fs -= 2; } while (x.measureText(r).width > 108); x.fillText(r, i * 128 + 64, 35); });
+    const t = new T.CanvasTexture(c); t.anisotropy = 4;
+    return t;
+  }
+  // A unit box whose +z face is the spine and +x face the front cover; the other faces are plain.
+  function bookGeometry() {
+    const pos = [], nor = [], uv = [], num = [], idx = [], e = 0.006;
+    const face = (n, pts, rect, plate) => {
+      const base = pos.length / 3, corner = [[0, 0], [1, 0], [1, 1], [0, 1]];
+      pts.forEach((pt, i) => {
+        pos.push(...pt); nor.push(...n);
+        const [fu, fv] = corner[i];
+        if (rect.length === 2) uv.push(rect[0], rect[1]); else uv.push(rect[0] + (rect[1] - rect[0]) * fu, rect[2] + (rect[3] - rect[2]) * fv);
+        if (plate) num.push((fu - plate[0]) / (plate[1] - plate[0]), (fv - plate[2]) / (plate[3] - plate[2])); else num.push(-1, -1);
+      });
+      idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    };
+    const h = 0.5, plain = [0.263, 0.5];
+    face([0, 0, 1], [[-h, -h, h], [h, -h, h], [h, h, h], [-h, h, h]], [e, 0.25 - e, e, 1 - e], [11.5 / 96, 84.5 / 96, 23 / 384, 73 / 384]);
+    face([1, 0, 0], [[h, -h, h], [h, -h, -h], [h, h, -h], [h, h, h]], [0.25 + e, 1 - e, e, 1 - e], [98 / 288, 190 / 288, 65 / 384, 111 / 384]);
+    face([-1, 0, 0], [[-h, -h, -h], [-h, -h, h], [-h, h, h], [-h, h, -h]], plain);
+    face([0, 0, -1], [[h, -h, -h], [-h, -h, -h], [-h, h, -h], [h, h, -h]], plain);
+    face([0, 1, 0], [[-h, h, h], [h, h, h], [h, h, -h], [-h, h, -h]], plain);
+    face([0, -1, 0], [[-h, -h, -h], [h, -h, -h], [h, -h, h], [-h, -h, h]], plain);
+    const g = new T.BufferGeometry();
+    g.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new T.Float32BufferAttribute(nor, 3));
+    g.setAttribute('uv', new T.Float32BufferAttribute(uv, 2)); g.setAttribute('aNum', new T.Float32BufferAttribute(num, 2));
+    g.setIndex(idx);
+    return g;
+  }
+  // per-instance aInst = (atlas column, atlas row, volume, gilded)
+  function bookMesh(geo, mat, count) {
+    geo.setAttribute('aInst', new T.InstancedBufferAttribute(new Float32Array(count * 4), 4));
+    const m = new T.InstancedMesh(geo, mat, count); m.frustumCulled = false;
+    return m;
+  }
+  function bookMaterial() {
+    const numMap = numeralTexture(), m = new T.MeshLambertMaterial({ map: bookAtlas() });
+    m.onBeforeCompile = (sh) => {
+      sh.uniforms.numMap = { value: numMap };
+      sh.vertexShader = 'attribute vec4 aInst;\nattribute vec2 aNum;\nvarying vec2 vNum;\nvarying vec2 vInst;\n' + sh.vertexShader.replace('#include <uv_vertex>',
+        `#include <uv_vertex>\n  vUv = vec2((uv.x + aInst.x) * ${SU.toFixed(6)}, 1.0 - (aInst.y + 1.0 - uv.y) * ${SU.toFixed(6)});\n  vNum = aNum; vInst = aInst.zw;`);
+      sh.fragmentShader = 'uniform sampler2D numMap;\nvarying vec2 vNum;\nvarying vec2 vInst;\n' + sh.fragmentShader.replace('#include <map_fragment>', `
+        vec4 texelColor = texture2D( map, vUv );
+        if (vNum.x > 0.0 && vNum.x < 1.0 && vNum.y > 0.0 && vNum.y < 1.0) {
+          vec4 nm = texture2D( numMap, vec2((vInst.x + vNum.x) / 16.0, vNum.y) );
+          texelColor.rgb = mix(texelColor.rgb, nm.rgb, nm.a);
+        }
+        if (vInst.y > 0.5) {
+          float lum = dot(texelColor.rgb, vec3(0.299, 0.587, 0.114));
+          texelColor.rgb = vec3(1.0, 0.78, 0.30) * (0.5 + 0.8 * lum);
+        }
+        texelColor = mapTexelToLinear( texelColor );
+        diffuseColor *= texelColor;`);
+    };
+    return m;
   }
   function glowTexture() {
     const c = document.createElement('canvas'); c.width = c.height = 64;
@@ -178,8 +280,8 @@
         const cs = { id: cat.id, cat, wing: w, x, z, s, quat: new T.Quaternion().setFromAxisAngle(Y_AXIS, north ? 0 : Math.PI), rows: [], done: false };
         cat.series.forEach((se) => {
           const y = ROW_Y0 + se.row * ROW_DY;
-          const lab = new T.Mesh(new T.PlaneGeometry(0.66, 0.052), new T.MeshBasicMaterial({ map: textTexture(se.name, 512, 40, '#3b2a1d', '#f3d9a4', 30) }));
-          lab.position.set(x, y - 0.02, z + s * (CD / 2 + 0.004)); lab.rotation.y = north ? 0 : Math.PI; scene.add(lab);
+          const lab = new T.Mesh(new T.PlaneGeometry(0.8, 0.066), new T.MeshBasicMaterial({ map: textTexture(se.name, 512, 42, '#3b2a1d', '#f7dfae', 32) }));
+          lab.position.set(x, y - 0.026, z + s * (CD / 2 + 0.004)); lab.rotation.y = north ? 0 : Math.PI; scene.add(lab);
           cs.rows[se.row] = { se, cs, y, slots: new Array(NV).fill(-1), filled: 0, landed: 0 };
         });
         cases[cat.id] = cs;
@@ -212,18 +314,20 @@
 
     // books: a coloured cover box and a cream page block per book
     const box = new T.BoxGeometry(1, 1, 1);
-    cover = new T.InstancedMesh(box, new T.MeshLambertMaterial({ map: spineTexture() }), NB);
+    const bookMat = bookMaterial();
+    cover = bookMesh(bookGeometry(), bookMat, NB);
     pages = new T.InstancedMesh(box, new T.MeshLambertMaterial({ color: 0xf3e8cf }), NB);
-    cover.frustumCulled = pages.frustumCulled = false;
+    pages.frustumCulled = false;
+    const inst = cover.geometry.attributes.aInst;
     TH.BOOKS.forEach((def, i) => {
       const se = TH.SERIES[def.series];
-      cover.setColorAt(i, col.set(def.gold ? '#f0c24e' : se.color));
+      inst.setXYZW(i, se.id % ACOLS, Math.floor(se.id / ACOLS), def.vol, def.gold ? 1 : 0);
       books.push({ id: i, def, se, st: 'pile', pos: new T.Vector3(), quat: new T.Quaternion(), vis: true, yaw: rand(-0.5, 0.5), jx: rand(-0.02, 0.02), jz: rand(-0.02, 0.02), pile: null });
     });
     scene.add(cover); scene.add(pages);
 
     // helpers: highlight boxes, ghost book, wayfinder beacons, sparkles, dust
-    hlBook = new T.Mesh(box, new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.38, depthWrite: false })); hlBook.visible = false; scene.add(hlBook);
+    hlBook = new T.Mesh(box, new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.2, depthWrite: false })); hlBook.visible = false; scene.add(hlBook);
     hlRow = new T.Mesh(new T.PlaneGeometry(IW, ROW_H - 0.02), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.16, depthWrite: false, side: T.DoubleSide })); hlRow.visible = false; scene.add(hlRow);
     ghost = new T.Mesh(box, new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false })); ghost.visible = false; scene.add(ghost);
     const beamGeo = new T.CylinderGeometry(0.1, 0.16, 1.3, 10, 1, true);
@@ -246,11 +350,9 @@
     handScene.add(new T.AmbientLight(0xffffff, 0.75));
     const hl = new T.DirectionalLight(0xffffff, 0.55); hl.position.set(-0.5, 1, 0.8); handScene.add(hl);
     handGroup = new T.Group(); handScene.add(handGroup);
-    const spine = cover.material.map;
-    for (let i = 0; i < 12; i++) {
-      const c = new T.Mesh(box, new T.MeshLambertMaterial({ map: spine })), p = new T.Mesh(box, pages.material);
-      c.visible = p.visible = false; handGroup.add(c); handGroup.add(p); handMeshes.push({ c, p, pop: 1 });
-    }
+    handCover = bookMesh(bookGeometry(), bookMat, 12); handPages = new T.InstancedMesh(box, pages.material, 12); handPages.frustumCulled = false;
+    handGroup.add(handCover); handGroup.add(handPages);
+    for (let i = 0; i < 12; i++) handMeshes.push({ id: -1, pop: 1 });
   }
 
   // ---------- book transforms ----------
@@ -507,7 +609,7 @@
     } else if (a && a.type === 'row') {
       const row = a.row, cs = a.cs, se = row.se;
       hlRow.visible = true; hlRow.position.set(cs.x, row.y + ROW_H / 2, cs.z + cs.s * (CD / 2 + 0.006)); hlRow.quaternion.copy(cs.quat);
-      hlRow.material.color.set(a.cand >= 0 ? 0x9df08a : a.fits.length ? 0xffe08a : 0xffffff); hlRow.material.opacity = a.cand >= 0 ? 0.24 : 0.12;
+      hlRow.material.color.set(a.cand >= 0 ? 0x9df08a : a.fits.length ? 0xffe08a : 0xffffff); hlRow.material.opacity = a.cand >= 0 ? 0.13 : 0.05;
       title = `${cs.cat.name} › ${se.name}`; hint = `${row.filled}/${NV} shelved`;
       if (a.cand >= 0) {
         const b = books[a.cand];
@@ -670,30 +772,30 @@
   }
   function refreshHand() {
     let h = 0;
-    const col = new T.Color();
+    const inst = handCover.geometry.attributes.aInst;
     handMeshes.forEach((m, i) => {
       const id = G.held[i];
-      if (id == null) { m.c.visible = m.p.visible = false; m.id = -1; return; }
+      if (id == null) { m.id = -1; return; }
       const b = books[id], se = b.se;
       if (m.id !== id) { m.id = id; m.pop = 0; }
-      m.c.visible = m.p.visible = true;
-      m.c.material.color.copy(col.set(b.def.gold ? '#f0c24e' : se.color));
-      m.c.scale.set(se.t, se.h, se.d); m.p.scale.set(se.t * 0.8, se.h + 0.008, se.d);
-      m.y = h + se.t / 2; m.yaw = 0.32 + ((i * 37) % 9 - 4) * 0.03; h += se.t;
+      inst.setXYZW(i, se.id % ACOLS, Math.floor(se.id / ACOLS), b.def.vol, b.def.gold ? 1 : 0);
+      m.se = se; m.y = h + se.t / 2; m.yaw = 0.32 + ((i * 37) % 9 - 4) * 0.03; h += se.t;
     });
+    inst.needsUpdate = true;
     handGroup.userData.h = h;
   }
   function updateHand(dt) {
-    const h = handGroup.userData.h || 0, sc = 0.5 * Math.min(1, 0.5 / Math.max(h, 0.01));
+    const h = handGroup.userData.h || 0, sc = 0.55 * Math.min(1, 0.5 / Math.max(h, 0.01));
     handGroup.scale.setScalar(sc);
-    handGroup.position.set(0.52, -0.43 + (calm() ? 0 : Math.sin(bob * 2) * 0.006), -1.0);
-    for (const m of handMeshes) {
-      if (!m.c.visible) continue;
+    handGroup.position.set(0.5, -0.43 + (calm() ? 0 : Math.sin(bob * 2) * 0.006), -1.0);
+    handMeshes.forEach((m, i) => {
+      if (m.id < 0) { _m.makeScale(0, 0, 0); handCover.setMatrixAt(i, _m); handPages.setMatrixAt(i, _m); return; }
       m.pop = Math.min(1, m.pop + dt * 6);
-      const y = m.y + (1 - m.pop) * 0.12;
-      m.c.position.set(0, y, 0); m.c.quaternion.setFromAxisAngle(Y_AXIS, m.yaw).multiply(Q_FLAT);
-      m.p.quaternion.copy(m.c.quaternion); m.p.position.set(0, 0, -0.006).applyQuaternion(m.c.quaternion).add(m.c.position);
-    }
+      const se = m.se, q = _q.setFromAxisAngle(Y_AXIS, m.yaw).multiply(Q_FLAT);
+      _v.set(0, m.y + (1 - m.pop) * 0.12, 0); _s.set(se.t, se.h, se.d); _m.compose(_v, q, _s); handCover.setMatrixAt(i, _m);
+      _hv.set(0, 0, -0.006).applyQuaternion(q).add(_v); _s.set(se.t * 0.8, se.h + 0.008, se.d); _m.compose(_hv, q, _s); handPages.setMatrixAt(i, _m);
+    });
+    handCover.instanceMatrix.needsUpdate = handPages.instanceMatrix.needsUpdate = true;
   }
   function updateBeacons() {
     let n = 0;
