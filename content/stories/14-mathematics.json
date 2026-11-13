@@ -1,0 +1,217 @@
+{
+  "section": "Mathematics",
+  "series": [
+    {
+      "name": "Elements of Number",
+      "volumes": [
+        {
+          "title": "Counting the Rolls",
+          "text": "Tamsin Bunce, the baker's daughter, came to the Emberwick schoolroom on a wet Monday and announced that she was no good at numbers and never would be. Mr. Quillfeather said only, \"Then we shall begin where numbers began,\" and set a basket of bread rolls upon his desk.\n\nHe asked whether there were enough rolls for the class. Tamsin did not count. She walked the room and put one roll before each pupil, and when she had finished, two rolls remained in the basket. \"More rolls than pupils, then,\" said Mr. Quillfeather, \"and you found it out without a single number. That matching, one to one, is the root of all counting. A number is only a name for how far the matching went.\"\n\nThen Tamsin counted the pupils anyway, got eleven, and added the two spare rolls to make thirteen. She was allowed to eat one."
+        },
+        {
+          "title": "Odd and Even",
+          "text": "In the schoolroom at Emberwick, Mr. Quillfeather had the baker's daughter, Tamsin Bunce, sort buttons into pairs. Some heaps paired off neatly, and those numbers he called even. Others left one lonely button over, and those were odd. Seven was odd, and its spare button rolled under the stove.\n\n\"Now add two odd heaps,\" he said. Tamsin pushed a heap of five against a heap of seven and frowned at the two leftover buttons. Then she slid them together. They made a pair, and twelve was even.\n\n\"Will it always happen?\" she asked. Mr. Quillfeather told her to think rather than try. She thought. Every odd heap is pairs with one left over. Two odd heaps bring two leftovers, and two leftovers are a pair. So odd and odd must make even, even heaps too large for all the buttons in town. It was her first proof."
+        },
+        {
+          "title": "Squares on the Tray",
+          "text": "Tamsin Bunce helped in her father's bakery before school, and one morning she noticed something on the bun tray. One bun made a square, of a sort. Three more buns tucked round its corner made a square of four. Five more round that made nine, and seven more made sixteen.\n\nShe carried the news to Mr. Quillfeather at the Emberwick schoolroom, still slightly floury. He drew it on the board. Each new square is the old one wearing a border shaped like a letter L, and each border needs two more buns than the last. So the odd numbers, added in order, always build squares. One and three are four. Add five for nine, seven for sixteen, nine for twenty-five.\n\n\"Add the first ten odd numbers,\" he said, \"without adding.\" Tamsin shut her eyes. Ten borders make a square ten buns each way. \"One hundred,\" she said, and it was."
+        },
+        {
+          "title": "The Staircase Sum",
+          "text": "Mr. Quillfeather, schoolmaster of Emberwick, wished for a quiet half hour, so he told his pupil Tamsin Bunce to add every number from one to ten. She was back in a minute with fifty-five, and he suspected guessing.\n\nTamsin showed him. She had built a staircase of sugar lumps: one, then two, then three, up to a column of ten. She built another the same, turned it upside down, and fitted it against the first. The two staircases made a block ten columns wide, each column eleven lumps tall. That is a hundred and ten lumps, and one staircase is half of it.\n\n\"And one to a hundred?\" he asked. A hundred columns, each a hundred and one tall, made ten thousand one hundred. Half was five thousand and fifty. He told her such staircase sums are called triangular numbers, and let her keep the sugar."
+        },
+        {
+          "title": "Numbers That Stand Alone",
+          "text": "The baker of Emberwick liked his buns set out in tidy rectangles, and his daughter Tamsin had learned which numbers obliged him. Twelve buns would go as two rows of six or three rows of four. But thirteen would do nothing except stand in one long line, and neither would seven or eleven.\n\nAt school she asked Mr. Quillfeather what was wrong with thirteen. \"Nothing is wrong with it,\" he said. \"It is a prime: a number that no smaller number divides, save one. Primes cannot be broken into equal rows.\"\n\nTogether they hunted primes below thirty and found ten: two, three, five, seven, eleven, thirteen, seventeen, nineteen, twenty-three and twenty-nine. Two was the only even one, since every other even number splits into two rows. Tamsin's father took the news badly. A baker's dozen, he said, had always been awkward on the tray."
+        },
+        {
+          "title": "The Flour Sieve",
+          "text": "To find every prime number up to fifty, Mr. Quillfeather chalked all fifty numbers on the schoolroom floor in Emberwick and handed Tamsin Bunce a damp rag. Primes are numbers that nothing divides except one and themselves, and he said they could be sieved out like lumps from flour.\n\nOne was set aside. Tamsin left two standing and wiped out every second number after it. She left three and wiped every third number, then did the same with five and with seven.\n\n\"Now eleven,\" she said. Mr. Quillfeather shook his head. Any number below fifty that eleven divides has a smaller divider too, and was wiped long ago. The first number needing eleven alone is eleven elevens, a hundred and twenty-one, far off the floor. Fifteen primes stood unwiped, from two up to forty-seven. Tamsin walked along them like stepping stones."
+        },
+        {
+          "title": "Breaking Sixty",
+          "text": "\"Every number is either a prime or built from primes,\" said Mr. Quillfeather, \"as every loaf is built from flour.\" His pupil Tamsin Bunce, the baker's daughter, was asked to break sixty into pieces that would break no further.\n\nShe began with six times ten. Six broke into two and three; ten broke into two and five. That left two, two, three and five, all primes. Across the Emberwick schoolroom her friend Wilf began differently, with four times fifteen. Four broke into two and two, fifteen into three and five. The very same four primes.\n\nThey tried twelve times five, and three times twenty. Always two, two, three, five. Mr. Quillfeather said it is so for every number there is: break it however you like, and the same primes fall out at the bottom. Tamsin thought it the most reassuring thing she had heard all week."
+        },
+        {
+          "title": "The Trick of Nines",
+          "text": "Tamsin Bunce kept the tally at her father's bakery in Emberwick, and Mr. Quillfeather taught her a trick for it. To learn whether nine divides a number, add up its digits. If nine divides that small sum, it divides the whole number. For seven hundred and thirty-eight, seven and three and eight make eighteen. Nine goes into eighteen, so it goes into the number, and indeed nine times eighty-two is seven hundred and thirty-eight.\n\nTamsin wanted the reason. He set out coins. Ten is nine with one over. A hundred is ninety-nine with one over. So each ten and each hundred hands nine its share and leaves a single coin behind. Seven hundreds leave seven coins, three tens leave three, and the eight units make eighteen.\n\nThe same trick works for three. That evening she caught an error in the flour bill, and was unbearable until bedtime."
+        },
+        {
+          "title": "The Largest Square",
+          "text": "A slab of gingerbread came out of the Emberwick bakery oven eighty-four fingers long and thirty-six wide. Tamsin Bunce, the baker's daughter, was told to cut it into equal squares, as large as could be, with no crumb wasted.\n\n\"Let the smaller measure the larger,\" said Mr. Quillfeather at school. Thirty-six goes into eighty-four twice, with twelve left over. Then let the leftover measure the thirty-six: twelve goes three times exactly, and nothing is left. When nothing is left, the last measure is the answer. Twelve divides both numbers, and no larger number does.\n\nSo the squares were twelve fingers each way, seven along the slab and three across, twenty-one in all. Mr. Quillfeather said the method was very old, older than the school and perhaps older than gingerbread. Tamsin tried it on forty and twenty-eight for practice, got four, and was rewarded with a corner piece."
+        },
+        {
+          "title": "Halving the Pie",
+          "text": "On the last day of term Tamsin Bunce brought an apple pie to the Emberwick schoolroom, and Mr. Quillfeather made a lesson of it before anyone could eat. He cut it in half and gave one half away. He halved what remained and gave away a quarter. Then an eighth, then a sixteenth.\n\n\"How much has gone?\" he asked. Tamsin added: a half, a quarter, an eighth and a sixteenth came to fifteen sixteenths. What remained on the plate was one sixteenth, exactly the size of the last slice given. It had been so at every step.\n\nAnd if he cut for ever? The slices given away would creep toward the whole pie, she said, closer than any crumb you could name, but never past it. Mr. Quillfeather was so pleased that he ate the last sixteenth himself, which the class held against him for some time."
+        },
+        {
+          "title": "A Perfect Number",
+          "text": "Mr. Quillfeather, the old schoolmaster of Emberwick, kept one piece of arithmetic for pupils he thought ready, and in her last winter at school he gave it to Tamsin Bunce. \"List the numbers that divide six,\" he said, \"leaving out six itself.\" One, two and three. \"Add them.\" Six again.\n\nSuch numbers are called perfect: they equal the sum of their own parts. Tamsin went hunting for the next with a slate and a plate of her father's shortbread. Eight failed, since one, two and four make only seven. Twelve overshot, its parts making sixteen.\n\nAt twenty-eight she stopped. One, two, four, seven and fourteen: twenty-eight exactly. Mr. Quillfeather told her the third is four hundred and ninety-six, and that nobody alive knows whether the list of perfect numbers ever ends. Tamsin liked that best of all. Even the books did not know everything."
+        },
+        {
+          "title": "Numbers Without End",
+          "text": "On Tamsin Bunce's last afternoon in the Emberwick schoolroom, Mr. Quillfeather asked a last question. \"Do the primes ever run out?\"\n\nShe tried pretending there were only four: two, three, five and seven. Multiply them together and you get two hundred and ten. Add one. Two hundred and eleven leaves one over when divided by two, by three, by five or by seven, so none of them divides it. Either it is a new prime or some new prime divides it. Whatever list you begin with, however long, the same trick finds a prime the list has missed. So no list is ever complete, and the primes go on for ever.\n\nMr. Quillfeather gave her his own slate. Tamsin kept the bakery's accounts and never again said she was no good at numbers. On quiet mornings she still set out the buns in squares."
+        }
+      ]
+    },
+    {
+      "name": "The Geometer’s Notebook",
+      "volumes": [
+        {
+          "title": "The Knotted Rope",
+          "text": "First entry. I am Wren Ashdown, fourteen, newly apprenticed to Mistress Corrigan the geometer, and this notebook is to hold whatever she teaches me. We have been engaged to lay out the bare courtyard behind Emberwick Library with paving, a round bed and a sundial, all to be ready by midsummer.\n\nToday we set the first corner. She took out a loop of rope with twelve knots at equal spaces. I held one knot, she pegged another three spaces along, and we pulled the loop taut into a triangle with sides of three, four and five spaces.\n\nThe corner between the three and the four is square. It must be, she says, whenever the two short sides, each multiplied by itself, add up to the long side multiplied by itself. Nine and sixteen make twenty-five. The masons checked it with their iron square and looked rather put out."
+        },
+        {
+          "title": "Finding the Middle",
+          "text": "Notebook of Wren Ashdown, at work on the courtyard behind Emberwick Library. Today Mistress Corrigan wanted the exact middle of the line between our two corner pegs, and she forbade me to measure it. Measuring, she says, is how mistakes get in.\n\nShe gave me a cord and a lump of chalk. I looped the cord on the first peg and swung an arc, keeping the cord a good deal longer than half the distance. Then, with the cord unchanged, I swung an arc from the second peg. The arcs crossed twice, once on each side of our line.\n\nA chalk line through the two crossings cut our line exactly in half, and at a square corner too. Each crossing lies equally far from both pegs, so the line through them can favour neither. I measured afterwards, in secret. She was right to the width of the chalk."
+        },
+        {
+          "title": "Three Corners, One Line",
+          "text": "Rain today, so no work in the library courtyard. Mistress Corrigan sat me, her apprentice Wren, at a reading-room table in Emberwick Library with scissors and scrap paper, and had me cut triangles: fat ones, thin ones, one like a church spire.\n\nThen she told me to tear the three corners off each and lay them point to point. Every time, the three corners fitted together into a perfectly straight edge. That is two square corners' worth, never more or less.\n\nHer reason is tidy. Rule a line through the top corner, level with the base. The two bottom corners reappear up there, one on either side, and the three sit in a row along the straight line. So if one corner of a triangle is square, the other two must share a single square corner between them. The librarian asked us, kindly, to take our scraps home."
+        },
+        {
+          "title": "The Long Diagonal",
+          "text": "Wren Ashdown's notebook, kept for Mistress Corrigan the geometer. The library courtyard at Emberwick is pegged out at last: eight paces by fifteen. But four pegs do not prove four square corners.\n\nThe test is the diagonal. In any triangle with a square corner, multiply each short side by itself and add the answers; the total is the long side multiplied by itself. Eight eights are sixty-four. Fifteen fifteens are two hundred and twenty-five. Together, two hundred and eighty-nine, which is seventeen seventeens.\n\nSo each diagonal should measure seventeen paces. We stretched the cord corner to corner both ways. One came out a little short and the other a little long, the sign of a leaning courtyard, so we nudged two pegs until both read seventeen. Our knotted rope of three, four and five obeys the same rule, she says, and so do five, twelve and thirteen."
+        },
+        {
+          "title": "Round the Rain Barrel",
+          "text": "There is to be a round bed in the middle of the library courtyard, seven paces across, and Mistress Corrigan asked me how much edging stone to order. I am Wren, her apprentice, and I did not know.\n\nShe had me wrap a string once round the rain barrel by the library door, then lay that string across the barrel's top. It went across three times, with a short piece over. We tried a bucket, a cartwheel and the lid of the inkpot. Always three times and a bit, and the bit is close to one seventh of the width.\n\nSo a circle seven paces across is about twenty-two paces round. The true figure is a whisker under, she says, and can never be written out exactly, however many figures one spends on it. We ordered twenty-two paces of edging. The spare whisker can go under the bench."
+        },
+        {
+          "title": "Six Steps Round",
+          "text": "Wren Ashdown, apprentice geometer, writing by the library lamp in Emberwick. Today I learned why Mistress Corrigan wants six-sided tiles for the courtyard.\n\nDraw a circle with a cord. Then, keeping the cord at the same length, step it round the rim. It lands back on its starting mark after exactly six steps. I did it four times, hoping to catch it out.\n\nJoin the six marks and you have a hexagon. Join each mark to the centre and you have six triangles, and every side of every one is the same cord's length: two spokes of the circle and one step. Equal sides make equal corners, so each corner is a third of a straight line, and six of them meet at the centre and fill the whole turn. Bees, she says, have known this longer than geometers. The potter starts on our tiles tomorrow."
+        },
+        {
+          "title": "Which Tiles Lie Flat",
+          "text": "I, Wren, had hoped for five-sided tiles in the library courtyard. Mistress Corrigan did not argue. She handed me a dozen clay pentagons and told me to pave the workshop table.\n\nIt cannot be done. Where three pentagons meet, a thin wedge of table shows between them, and a fourth will not squeeze in. The corners explain it. A full turn is three hundred and sixty degrees, and tiles lie flat only if the corners meeting at a point use it up exactly. A pentagon's corner is one hundred and eight. Three make three hundred and twenty-four, leaving thirty-six to spare.\n\nSquares manage, four nineties to a point. Triangles manage with six sixties, and hexagons with three corners of one hundred and twenty. Among shapes with equal sides and equal corners, only those three pave a floor alone. I kept one pentagon as a paperweight."
+        },
+        {
+          "title": "The Tower's Shadow",
+          "text": "Notebook of Wren Ashdown, apprentice to Mistress Corrigan. Our sundial must stand clear of the shadow of the library clock tower, so we needed the tower's height, and nobody in Emberwick would lend us a ladder that long.\n\nWe used the sun instead. I stood a three-foot stick upright in the courtyard, and its shadow measured two feet. At the same moment Mistress Corrigan paced out the tower's shadow, which ran forty feet along the ground.\n\nSunlight strikes stick and tower at the same slant, so the two make triangles of the same shape, one small and one large. The stick is one and a half times its shadow, so the tower must be one and a half times its own. Sixty feet. The librarian later found the builder's account in a drawer, which says sixty feet and four inches. Mistress Corrigan blames the four inches on the weathervane."
+        },
+        {
+          "title": "The Pie Cut Thin",
+          "text": "The gardener asked how much ground the round bed in the library courtyard will cover, to order his lavender. Mistress Corrigan passed the question to me, her apprentice Wren, with a paper circle and a knife.\n\nI cut the circle into sixteen thin wedges, like a pie, and laid them side by side, one point up, the next point down. They made something very like a rectangle. Its height was the circle's spoke, from centre to rim. Its length was half the rim, since half the crusts lay along the top and half along the bottom.\n\nOur bed is seven paces across, so the spoke is three and a half, and half the rim is eleven. Three and a half elevens are thirty-eight and a half square paces. The gardener ordered lavender for thirty-eight. The odd half, he says, is where he will stand to admire it."
+        },
+        {
+          "title": "A Square Corner Inside",
+          "text": "Wren Ashdown's notebook. The round bed in the library courtyard is edged, and today we tested whether it is truly round. Mistress Corrigan drove two pegs at opposite ends of a line through the centre and gave me the mason's iron square.\n\nThe rule: hold the square so its two arms touch the two pegs, and its corner will rest on the circle, anywhere round the rim. One stone sat a thumb's width proud, and the square caught it.\n\nJoin the corner to the centre. That spoke equals the spokes running to the pegs, so it makes two triangles, each with two equal sides and therefore two equal corners. The angle at my iron square is one of each kind added together. So are the two peg corners, between them. Since the big triangle's three corners fill a straight line, the square's corner is half of it."
+        },
+        {
+          "title": "North by Shadow",
+          "text": "A sundial is useless unless it points true north, and Mistress Corrigan does not trust compass needles. So today, in the courtyard of Emberwick Library, she and I, her apprentice Wren, asked the sun.\n\nWe set a rod upright on a levelled board and drew a circle round its foot. In the morning the rod's shadow was long and reached past the circle. As the sun climbed the shadow shrank, and I marked the spot where its tip crossed the circle. After noon it lengthened again, and I marked where the tip crossed on its way out.\n\nThe sun rises and sinks evenly either side of noon, so those two marks are a matched pair. A line from the rod's foot to the point midway between them runs due north. The compass disagreed by a few degrees. The needle, said Mistress Corrigan, is entitled to its opinion."
+        },
+        {
+          "title": "Midsummer Noon",
+          "text": "Last entry. I am Wren Ashdown, and since the thaw I have been apprentice to Mistress Corrigan the geometer. Today, midsummer, the courtyard behind Emberwick Library was opened, and half the town came to walk on it.\n\nThey walked on corners squared with a knotted rope, and on six-sided tiles that leave no gaps. In the middle pattern one tile is ringed by six, then twelve, then eighteen: thirty-seven in all. The lavender bed is seven paces across and twenty-two round. At noon the sundial's shadow touched its line just as the tower clock struck twelve. The clock was a minute late.\n\nNobody admired the geometry. They admired the lavender, which is as it should be. Mistress Corrigan gave me the knotted rope to keep. This notebook is full, so I am leaving it in the library, where the work it describes lies just outside the window."
+        }
+      ]
+    },
+    {
+      "name": "Puzzles & Proofs",
+      "volumes": [
+        {
+          "title": "Fox, Goose and Oats",
+          "text": "Bram Hollin had worked the rope ferry across the river Ember for thirty-four years, and he was tired of the weather as a subject. So when Juno Marsh, aged ten, began crossing each morning to school in Emberwick, he gave her a puzzle instead.\n\n\"A farmer comes to my ferry with a fox, a goose and a sack of oats. The boat holds him and one other thing. Leave the fox with the goose, and no more goose. Leave the goose with the oats, and no more oats. Get them all across.\"\n\nJuno had it by the far bank. Take the goose over first. Go back and fetch the fox, but carry the goose home again. Leave the goose, take the oats over to the fox, and return a last time for the goose. Seven crossings. The trick, said Bram, is being willing to carry something backwards."
+        },
+        {
+          "title": "Four Pints Exactly",
+          "text": "Bram Hollin, who works the rope ferry over the river Ember, keeps two tin jugs under the bench for bailing. One holds five pints and one holds three, and neither has a mark on it. One morning he set them before his youngest passenger, Juno Marsh, on her way to school in Emberwick. \"Measure me four pints exactly,\" he said. \"You have the whole river to draw on.\"\n\nJuno got her sleeves wet, but she got it. Fill the five. Pour from it into the three until the three is full, which leaves two pints in the five. Empty the three over the side. Tip those two pints into the three. Fill the five again, and from it top up the three, which has room for just one pint more.\n\nFour pints are left in the big jug. Two fives, less two threes, make four. Bram said arithmetic was drier."
+        },
+        {
+          "title": "Fifteen Handshakes",
+          "text": "It was market day, and six passengers crowded onto the Ember ferry: a miller, two aunts, a pedlar, a curate and young Juno Marsh, bound for school. Being polite people, each shook hands once with every other. Bram Hollin the ferryman asked Juno how many handshakes that had made.\n\nShe said thirty-six, then thirty. Each of the six had shaken five hands, and six fives are thirty. But Bram pointed out that the miller shaking the curate's hand and the curate shaking the miller's were one handshake, not two. Every shake had been counted from both ends. Half of thirty is fifteen.\n\nJuno distrusted it, so she counted another way. The miller shook five hands. The first aunt shook four new ones, the next person three, then two, then one: fifteen again. When two honest roads reach the same answer, said Bram, you may stop worrying."
+        },
+        {
+          "title": "The Light Coin",
+          "text": "Somebody had paid Bram Hollin, the Ember ferryman, with a false penny. It looked like the other eight in his tin, but was lighter. He owned a balance with two pans, and he bet his young passenger Juno Marsh that she could not find the false coin in two weighings.\n\nJuno first thought of four coins against four, and saw the trap: if one pan rose she would have four suspects and a single weighing left. So she weighed three against three. If the pans hung level, the light coin was among the three left out. If not, it was in the pan that rose.\n\nEither way, three suspects remained. She weighed one against another. The pan that rose held the culprit, and if they balanced, it was the third. A balance gives three answers, said Juno, so make three heaps. Bram paid up, though not with that penny."
+        },
+        {
+          "title": "The Patched Deck",
+          "text": "The deck of the Ember ferry is laid in squares, eight by eight, and Bram Hollin tars every other one so that it looks like a draughts board. Two squares at opposite corners are cut away for the mooring posts, which leaves sixty-two. Bram had thirty-one boards, each the size of two squares side by side, and he asked his schoolgirl passenger Juno Marsh how to cover the deck.\n\nShe drew decks on her slate for three crossings and always had two squares left over. On the fourth she stopped drawing and looked at the tar.\n\nEach board must cover one tarred square and one plain. But opposite corners of a draughts board are the same colour. Both missing squares were tarred, leaving thirty tarred and thirty-two plain. Thirty-one boards need thirty-one of each. It cannot be done. Bram said a proof like that saves a deal of sawing."
+        },
+        {
+          "title": "Socks in the Dark",
+          "text": "Bram Hollin rises before dawn to work the Ember ferry, and he dresses without a candle so as not to wake the dog. His drawer holds ten grey socks and ten brown, all loose. \"How many must I pull out,\" he asked Juno Marsh on the morning crossing, \"to be sure of a pair that match?\"\n\nJuno, who is eleven, said eleven. Bram said three. There are only two colours. The first two socks may differ, but the third must agree with one of them. For the same reason, among any thirteen people two must share a birth month.\n\n\"But to be sure of a grey pair?\" asked Juno. Bram began to say three again and stopped. With bad luck he might draw all ten brown socks first. Twelve, then. He allowed that she had caught him, and hauled the rest of the way in thought."
+        },
+        {
+          "title": "The Five Bridges of Sedgeby",
+          "text": "At Sedgeby, on the marsh, Heron Isle sits in the middle of the river. Two footbridges join the isle to the north bank and two join it to the south. A fifth, the cart bridge, runs from bank to bank. Juno Marsh, whose aunt lives there, asked Bram Hollin the Ember ferryman whether one could stroll over every bridge exactly once and finish where one began.\n\nBram scratched it on the deck with a nail. Passing through a place uses two bridge-ends, one arriving and one leaving. So a round walk needs an even number of bridge-ends everywhere. The isle has four, but each bank has three.\n\nNo round walk, then. An odd place can only be a start or a finish, so begin on one bank and end on the other: over to the isle, back by its twin, across the cart bridge, onto the isle, and off again."
+        },
+        {
+          "title": "Three Wrong Labels",
+          "text": "Three crates came aboard the Ember ferry from the orchards, chalked APPLES, PEARS, and APPLES AND PEARS. The orchard boy, said Bram Hollin the ferryman, had put every label on the wrong crate. \"You may take one fruit from one crate, without peeking. Then tell me what is in all three.\"\n\nHis passenger Juno Marsh thought as far as mid-river. Then she reached into the crate marked APPLES AND PEARS and drew out an apple.\n\nThat label is wrong, so the crate is not mixed; it holds only apples. The crate marked PEARS cannot hold pears, for its label is wrong too, and it cannot hold the apples, which are found. It must be the mixed one. That leaves pears for the crate marked APPLES. One apple had sorted three crates. Bram let her keep it, and observed that a known lie is nearly as useful as the truth."
+        },
+        {
+          "title": "The Snail on the Post",
+          "text": "A mooring post stands at the Emberwick landing, ten feet from waterline to top, and one spring morning a snail sat at the bottom. Bram Hollin, the ferryman, made it a puzzle for his passenger Juno Marsh. \"Each day that snail climbs three feet. Each night it slips back two. On which day does it reach the top?\"\n\n\"The tenth,\" said Juno. One foot gained each day, ten feet to go. Bram only hummed, which meant she was wrong, so she walked it through on her fingers.\n\nAfter seven days and seven nights the snail rests at seven feet. On the eighth day it climbs three more and stands on top of the post. It does not slip that night, having arrived. The eighth day. A pattern may hold all the way along, said Bram, and still break at the end. The real snail took most of April."
+        },
+        {
+          "title": "Always Five",
+          "text": "For once it was Juno Marsh who brought a puzzle aboard the Ember ferry. \"Think of a number,\" she told Bram Hollin, the ferryman. \"Double it. Add ten. Halve what you have. Take away the number you first thought of. You are left with five.\"\n\nBram had thought of seven: fourteen, twenty-four, twelve, five. He tried a hundred and got five. He tried a half, out of spite: one, eleven, five and a half, five. \"It works for those three,\" he said. \"Prove it for the rest.\"\n\nJuno was ready. Picture the secret number as pebbles in a closed bag. Double it: two bags. Add ten loose pebbles. Halve everything: one bag and five pebbles. Take the bag away. Five pebbles lie on the deck, and nobody ever opened the bag. That, said Bram, is the difference between trying and proving. Trying tests one number. Proving settles them all."
+        },
+        {
+          "title": "The Square of Fifteen",
+          "text": "Bram Hollin chalked a square of nine boxes on the deck of the Ember ferry and gave the chalk to his passenger, Juno Marsh. \"The numbers one to nine, one in each box, so that every row, every column and both slanting lines add up the same.\"\n\nFirst, the total: one to nine make forty-five, shared among three rows, so each line must come to fifteen. Next, the middle box. Four lines pass through it, worth sixty together. Those four lines cover every box once and the middle three times more. Forty-five and three middles make sixty, so the middle is five.\n\nThe rest fell out quickly. Across the top she wrote two, seven, six; in the middle nine, five, one; along the bottom four, three, eight. Bram checked all eight lines with his thumb. His own answer had taken a fortnight, he said, and hers a river's width."
+        },
+        {
+          "title": "The Ferryman's Own Puzzle",
+          "text": "Juno Marsh was sixteen, and it was her last morning crossing on the Ember ferry before the coach took her to the college in the Lowlands. For six years Bram Hollin had set her puzzles. This time she set him one.\n\n\"You wake every morning on the Emberwick bank and sleep there every night. Forty years on this rope. Without counting, have you crossed the river an odd or an even number of times?\"\n\nBram hauled in silence to mid-river. Then he laughed. Each crossing changes his bank. To end each day where he began, he must cross back for every crossing over, so they go in pairs. Even. Not one of them counted, and yet he was certain. At the landing he gave her an oilcloth notebook holding every puzzle he had asked her, each with her proof. On the cover he had written: Puzzles and Proofs."
+        }
+      ]
+    },
+    {
+      "name": "Tables of Chance",
+      "volumes": [
+        {
+          "title": "A Hundred Tosses",
+          "text": "Osric Tallow, the candle-maker of Emberwick, had been asked to run a game stall at the Lantern Fair, to raise money for the library roof. He knew wax, not games. So on the first frosty evening he and his niece Bea sat down by the fire with a penny and a ledger, to learn how chance behaves.\n\nA penny has two faces and no reason to favour either, so the chance of heads is one in two. Bea tossed it a hundred times. Heads came fifty-three times, tails forty-seven.\n\n\"Then it is not one in two,\" said Bea. Osric thought it was, near enough. One in two does not promise fifty exactly, he decided. It promises that over many tosses the tally will lean close to half. They ruled the first table in the ledger, and Bea wrote at the top: Chance speaks of the long run."
+        },
+        {
+          "title": "Two Pennies, Four Ways",
+          "text": "On the second evening of their study of chance, Bea Tallow and her uncle Osric, the Emberwick candle-maker, tossed two pennies together. Bea had it settled before they began. Three things could happen, two heads, two tails, or one of each, so each must come one time in three.\n\nThe ledger disagreed. In a hundred tosses, two heads came twenty-four times, two tails twenty-seven, and one of each forty-nine. Nearly half, not a third.\n\nOsric found the reason by dabbing candle wax on one penny. Now they could see that waxed-heads with plain-tails and waxed-tails with plain-heads were different happenings that merely looked alike. There are four equal ways for two pennies to fall, and two of the four give one of each. So mixed comes half the time, and two heads only a quarter. Bea wrote under the table: Count the ways, not the names."
+        },
+        {
+          "title": "The Honest Die",
+          "text": "Osric Tallow, candle-maker of Emberwick, moulded his first die from beeswax. By the fireside it softened, sagged, and began to favour the four. So he and his niece Bea borrowed a bone die from the innkeeper, for an honest die must have six faces with nothing to choose between them.\n\nWith six equal faces, the chance of any one is one in six. Three faces are even, so an even throw has three chances in six, or one in two. Only the five and the six beat four, so that chance is two in six, or one in three. All six faces together make six in six, since the die must land on something.\n\nBea rolled it a hundred and twenty times for the ledger. One in six would be twenty sixes. She got twenty-two, and knew better than to complain. The wax die became a candle."
+        },
+        {
+          "title": "The Table of Sums",
+          "text": "For two dice, Bea Tallow ruled the largest table yet in the ledger she kept with her uncle Osric, the candle-maker of Emberwick. One die was plain bone and one they had stained with beetroot, to tell them apart. Six faces on the white, six on the red: thirty-six ways to fall, all equally likely.\n\nIn each box she wrote the two faces added together. A total of two appeared once, and so did twelve. But seven ran slantwise across the table, six times: one and six, two and five, three and four, and the same again with the colours changed about.\n\nSo seven comes six times in thirty-six, or one roll in six, and twelve only one roll in thirty-six. Bea had always wished for twelve because it was the biggest. Her uncle observed that she had been backing the rarest horse in the stable."
+        },
+        {
+          "title": "At Least One Six",
+          "text": "Bea Tallow reasoned thus, in her uncle's candle shop in Emberwick: one die shows a six one time in six, so two dice must show a six two times in six. Her uncle Osric said it sounded right, which made them both suspicious. They opened their ledger at the table of two dice, with its thirty-six boxes.\n\nThe white die's six fills one row of six boxes. The red die's six fills one column of six. But the row and the column cross at double six, and that box must not be counted twice. Eleven boxes hold a six, not twelve.\n\nThey checked it backwards. Each die has five faces that are not a six, and five fives give twenty-five boxes with no six. Thirty-six less twenty-five is eleven again. So the chance of at least one six is eleven in thirty-six: a little under one in three."
+        },
+        {
+          "title": "The Penny Forgets",
+          "text": "One evening in the candle shop at Emberwick, Bea Tallow tossed five heads in a row. Her uncle Osric entered them in their ledger of chances. \"Tails next,\" said Bea. \"It is due.\"\n\nA run of five heads is rare. Each toss halves the chance, so it goes one in two, then four, eight, sixteen, thirty-two: one chance in thirty-two before you begin. Six heads running is one in sixty-four. But those five were not waiting to happen. They had happened. All that remained was one ordinary toss of one ordinary penny, which has no memory and owes nobody anything. One in two, as ever.\n\nBea tossed. Heads again. Then came tails three times together, which she said proved her point and Osric said proved nothing. He wrote in the margin: The penny forgets. It is the most useful line in the ledger and the hardest to believe."
+        },
+        {
+          "title": "Beans in a Bag",
+          "text": "Osric Tallow, the Emberwick candle-maker, put three red beans and two white into a cloth bag and held it out to his niece Bea. They were studying chance that winter. Draw one bean: three of the five are red, so the chance of red is three in five.\n\n\"Now draw two together. What chance that both are red?\" Bea named the beans so that she could list every pair. There were ten pairs in all, and only three of them were red with red. Three in ten.\n\nOsric reached it another way. The first bean is red three times in five. But then only two reds remain among four beans, an even chance. Half of three fifths is three tenths. A penny forgets its last toss, Bea wrote in the ledger, but a bag remembers what has been taken out of it. Then they planted the beans."
+        },
+        {
+          "title": "Three Pennies",
+          "text": "Bea Tallow had a plan for the game stall her uncle Osric was to run at the Lantern Fair in Emberwick. A player tosses three pennies and wins if any shows a head. It sounded generous. Osric opened their ledger of chances to see how generous.\n\nThree pennies can fall in eight equal ways: two for the first, doubled by the second, doubled again by the third. Exactly two heads can happen in three of those ways, since the odd tail may be the first, second or third penny. Three in eight.\n\nBut any head at all was simpler reckoned backwards. Only one way of the eight has no head: tails, tails, tails. So seven players in every eight would win. Osric pictured the prize table empty by noon and the library roof still leaking. Often it is easiest, Bea noted, to count what you do not want."
+        },
+        {
+          "title": "What a Game Pays",
+          "text": "A fair needs prizes, and prizes cost money. So Osric Tallow, candle-maker of Emberwick, and his niece Bea opened their ledger of chances to see what a game stall keeps.\n\nThey tried a plain game first. The player pays one penny and rolls one die, and a six wins four pennies. Over six plays, on the average, each face turns up once. The stall takes six pennies and pays out four, keeping two. With a prize of six pennies the game would be perfectly fair, and in the long run nobody would gain, the library roof included.\n\nSo an honest stall leans a little its own way, and says so on the board. But Bea disliked the game. One winner in six meant five glum faces for every glad one, and a fair ought to send people home pleased. They wanted a game that paid less, more often."
+        },
+        {
+          "title": "Twenty-Three Birthdays",
+          "text": "Miss Arkle, the schoolmistress of Emberwick, bet Bea Tallow a currant bun that two of the twenty-three children in her class shared a birthday. A year has three hundred and sixty-five days, and only twenty-three children to scatter over them.\n\nShe lost. Hob the carter's son and Mercy from the mill were both born on the ninth of March. That evening Bea and her uncle Osric, the candle-maker, opened their ledger of chances to see how she had been robbed.\n\nThe mistake was counting children instead of pairs. Each child may match any of the other twenty-two, and twenty-three times twenty-two, halved, makes two hundred and fifty-three pairs. Every pair is a small separate chance of a match. The full sum cost Osric two candles, and it came out a little better than even. Bea paid the bun. Coincidences, she wrote, have more chances than they seem."
+        },
+        {
+          "title": "Sevens and Doubles",
+          "text": "After a winter of tossing pennies and rolling dice, Bea Tallow and her uncle Osric, the Emberwick candle-maker, designed their game for the Lantern Fair. The player pays a penny and rolls two dice. A seven wins. So does any double. The winner takes two pennies from the stall.\n\nTheir table of two dice gave the chances. Of its thirty-six boxes, six make a seven and six are doubles. No box is both, because a double always adds up to an even number. Twelve winning boxes in thirty-six: one roll in three.\n\nThen the money. In thirty-six plays, on the average, the stall takes thirty-six pennies and pays twelve winners two apiece, twenty-four in all. Twelve pennies stay for the library roof, and every third player walks off pleased. Osric painted the rules on a board, with the chances written underneath for anyone who cared to check."
+        },
+        {
+          "title": "The Lantern Fair",
+          "text": "The Lantern Fair came to Emberwick on a cold evening, and Osric Tallow's stall stood under a string of his own candles. Roll two dice for a penny; a seven or a double wins two. His niece Bea kept the tally in their ledger of chances.\n\nBy closing time there had been three hundred and sixty plays. One in three should win: a hundred and twenty. In fact a hundred and twenty-seven did. The stall paid out two hundred and fifty-four pennies and kept a hundred and six, not the hundred and twenty the tables foretold.\n\nBea was not troubled. Their first table held fifty-three heads in a hundred tosses. Chance leans; it does not promise. A small boy had won three times running, and the baker had lost nine. The pennies went to the library roof. The ledger went to the library too, and you are holding it."
+        }
+      ]
+    }
+  ]
+}
