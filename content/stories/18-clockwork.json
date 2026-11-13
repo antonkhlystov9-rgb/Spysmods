@@ -1,0 +1,217 @@
+{
+  "section": "Clockwork",
+  "series": [
+    {
+      "name": "The Horologist’s Manual",
+      "volumes": [
+        {
+          "title": "Sweep Before You Mend",
+          "text": "This manual is written by me, Tobias Quill, clockmaker of Cogger's Lane in Emberwick, for my new apprentice, Nettie Aldery, who arrived this morning with a carpet bag and an alarming number of questions. She is fourteen. She will be here seven years, if the questions do not finish me first.\n\nThe first lesson of horology is the broom. Sweep the workshop every evening, slowly, towards the lamp, and look through the sweepings before they go in the bin. A clock screw is smaller than a barley grain and costs an afternoon to remake. Nettie thought I was making a servant of her. Then she found, in her first dustpan, a click spring I had given up for lost in March.\n\nRule the first: nothing in this shop is rubbish until it has been looked at twice."
+        },
+        {
+          "title": "The Names of Things",
+          "text": "Nettie Aldery, my apprentice here in Cogger's Lane, has been given an old kitchen clock to take to pieces. Before she touched a screw I made her draw it, front and back. Then each part came off and was laid on a clean cloth, left to right, in the order it was removed. A clock goes back together in the reverse of the way it came apart, and the cloth remembers what the apprentice will not.\n\nLearn the names. A wheel is large and has teeth. A pinion is small and has leaves. The arbor is the axle they ride on, and a pivot is the fine end of the arbor, turning in its hole in the brass plate.\n\nShe rebuilt the clock by supper with one wheel left over. We consulted the drawing. Tomorrow she will do it again."
+        },
+        {
+          "title": "A Drop Is Too Much",
+          "text": "A clock is cleaned before it is oiled, and oiled far less than you would think. I, Tobias Quill, have told my apprentice Nettie so about once a week since she came to the shop.\n\nWash every part and dry it. Clean each pivot hole with a sharpened stick of pegwood, twirling it and trimming it until the wood comes out as pale as it went in. Then give each pivot one small drop of oil from the tip of a wire. Put none on the wheel teeth. Oil there gathers dust, and dust in oil is grinding paste.\n\nIn her second month Nettie oiled a mantel clock as generously as she would butter toast. It ran beautifully for a week and then stopped dead, and she spent two days undoing her own kindness. More clocks die of affection than of neglect."
+        },
+        {
+          "title": "Respect the Mainspring",
+          "text": "Rule the fourth in this manual is the one I shout. Before you loosen anything, let down the power.\n\nA mainspring is a ribbon of steel some feet long, coiled into a barrel no bigger than a jam-pot lid. Wound up, it holds a week of work, and if you part the plates carelessly it will hand you the whole week in half a second. So fit the key to the winding square, take the strain, lift the click with a peg, and let the key turn back through your fingers a little at a time until the spring is slack.\n\nAt fifteen I forgot. There is still a wheel tooth in the ceiling beam of this shop, above the lathe, and I show it to every apprentice. Nettie Aldery is in her second year with me and has not forgotten once. She looks at the beam often."
+        },
+        {
+          "title": "Counting Teeth",
+          "text": "Nettie Aldery, in her third year at my bench in Emberwick, has discovered that a clock is arithmetic made of brass. Here is the sum I set her.\n\nDivide the teeth of a wheel by the leaves of the pinion it drives. The centre wheel turns once an hour. It has 64 teeth and drives a pinion of 8, so the third wheel turns 8 times. The third wheel has 60 teeth and drives another pinion of 8, so the escape wheel turns seven and a half times for each of those: 60 turns an hour, once a minute. It has 30 teeth, each tooth allows two beats, and so the pendulum beats seconds.\n\nLast week a clock came in with its third wheel missing altogether. Nettie worked out the tooth count on a seed packet. Sixty. A lost wheel can be found with a pencil."
+        },
+        {
+          "title": "Only the Length Matters",
+          "text": "The rate of a pendulum depends on its length and on nothing else worth mentioning. Lower the bob and the clock goes slower. Raise it and the clock gains. A pendulum that beats seconds is a little over thirty-nine inches long, and one a quarter of that length beats twice as fast.\n\nMy apprentice Nettie Aldery did not believe that the weight made no difference, which is to her credit. She hung a flat iron and a thimble from the shop beam on threads of equal length and set them swinging together. They kept step all afternoon. She has not argued the point since.\n\nUnder every bob is a rating nut. Turn it a little, wait a day, and see what the clock does. Then write what you learned inside the case door, for the next person, who may be you."
+        },
+        {
+          "title": "Listening for the Beat",
+          "text": "A clock in beat says tick, tock, with the same pause after each. A clock out of beat says tick-tock, and waits, and tick-tock, like a man walking with a stone in his shoe. It may go for an hour so. It will not go for a week.\n\nThe cure is small. Either the case is leaning and wants a slip of wood under one foot, or the crutch, the wire that leads the pendulum, wants bending a hair's breadth one way. Bend, listen, bend again. Use your ears and not your eyes.\n\nNettie Aldery is four years into her time with me, and her ears are better than mine. She can hear a clock out of beat across the shop while a customer is talking. I have begun asking her opinion. Neither of us has mentioned it."
+        },
+        {
+          "title": "Three Broken Pivots",
+          "text": "Sooner or later a clock arrives with a part nobody can buy, and then the horologist must make it. This year, her fifth in my shop, Nettie Aldery learned to turn a new pivot.\n\nThe arbor spins in the lathe. You hold a graver, a small steel chisel, on the rest and take off metal in shavings finer than hair until the pivot is straight, round and the right size for its hole. Then it is hardened, tempered until the steel turns blue, and burnished until it shines.\n\nNettie broke three. Each snapped at the last moment, as they do. She did not speak for the rest of the day, and the fourth was perfect. I keep her three in a tin on the shelf, next to a much larger tin of my own. Hands learn by spoiling steel."
+        },
+        {
+          "title": "How a Clock Counts",
+          "text": "A striking clock must count, and there are two ways to teach it. The older is the count wheel, a disc with notches spaced further and further apart. The clock strikes until a lever drops into the next notch. It works, but it does not know the hour. Move the hands carelessly and it will strike four at six.\n\nThe better way is the rack and snail. The snail is a stepped cam that turns with the hour hand, and the depth of the step decides how many blows are struck. It cannot lose its place.\n\nMy apprentice Nettie, now in her sixth year, was called to the Lamb Inn, where the clock struck nine at noon. It was a count wheel. She let it strike round until it agreed with the hands, charged twopence, and was declared a genius."
+        },
+        {
+          "title": "The Counter and the Ticket",
+          "text": "No clock walks into the shop alone. It comes with an owner, and this page of the manual is about owners.\n\nWrite a ticket for every job: the name, the fault as the customer tells it, in the customer's words, and later the fault as you find it. They are seldom the same. Give an honest estimate. If the repair will cost more than the clock, say so plainly, and then do as you are asked. Never call a clock worthless. Somebody's grandfather wound it every Sunday.\n\nNettie Aldery now keeps my counter in Cogger's Lane on market days. She told a Lowlands farmer that his stopped clock needed nothing but winding, and showed him how. He left offended. He has since brought us four clocks and a cousin."
+        },
+        {
+          "title": "A Clock of Her Own",
+          "text": "In the seventh year an apprentice makes a clock. Not mends: makes, from brass sheet and steel rod, every wheel and pinion by her own hand. That is the custom, and Nettie Aldery chose the hardest honest thing, a weight-driven wall clock with a pendulum beating seconds.\n\nEach wheel is cut on the wheel-cutting engine, one tooth at a time, the blank turned on by a dividing plate so the spaces fall even. Then the spokes are sawn and filed out, and the wheels are set at the proper depth with their pinions, neither binding nor loose.\n\nShe worked evenings from harvest to spring and forbade me the back room. I looked once, through the gap in the door. She was testing the depth of two wheels by lamplight, turning them slowly, listening. I went to bed and slept very well."
+        },
+        {
+          "title": "Quill and Aldery",
+          "text": "Nettie Aldery set her clock going on a wet morning in April, in the back room of my shop in Cogger's Lane. We let it run a week beside my regulator. It lost four seconds. She gave the rating nut a quarter turn, and in the second week I could measure no error at all.\n\nI signed her papers that evening. Seven years, and she is a clockmaker.\n\nThis manual was written for one reader, and it is hers now, to scribble in and argue with. On Thursday the signwriter came and painted new words above the door: Quill and Aldery. She watched from across the lane, then came in and swept the workshop as she has every night since she was fourteen. There was a screw in the dustpan. She looked at it twice and put it in the tin."
+        }
+      ]
+    },
+    {
+      "name": "Gears & Escapements",
+      "volumes": [
+        {
+          "title": "Four Minutes Slow",
+          "text": "I am Hester Brannock, keeper of the tower clock above the Market Hall in Emberwick. I have wound it every Monday and Friday for nineteen years, and in that time it has never strayed more than half a minute in a week.\n\nThis spring it has begun to lose. Four minutes one week, nothing the next, three the week after. The baker noticed first, because he opens by it, and he has taken to glaring up at the dial.\n\nA clock that loses steadily is no trouble. You turn the nut under the pendulum and that is that. A clock that loses only now and then is hiding something. I have started this notebook to find out what, and I mean to go through the whole machine, wheel by wheel, until I do."
+        },
+        {
+          "title": "Weights and the Going Train",
+          "text": "A tower clock is driven by a falling weight. Ours, above Emberwick's Market Hall, is an iron block as heavy as two men, hung on a wire line that unwinds from a drum over the week. The drum turns the great wheel, and the great wheel passes its turning up through the going train, each wheel moving faster and with less force than the one before.\n\nIf the weight caught on anything in its fall, the force would falter and the clock would lose. So I climbed down the weight shaft with a lantern. I found a jackdaw's nest on a ledge, a foot clear of the weight, and nothing else. I greased both pulleys and checked the line for kinks.\n\nThe following week the clock lost three minutes. It is not the weight. The jackdaws may stay."
+        },
+        {
+          "title": "The Anchor and Its Recoil",
+          "text": "The escapement is the part of a clock that lets the power out one tick at a time. In Emberwick's tower clock, which I keep, it is an anchor: a steel arm shaped like its name, rocking above a wheel of thirty pointed teeth. As the pendulum swings, one end of the anchor lets a tooth go and the other end catches the next. Each escaping tooth gives the pendulum a small push.\n\nWatch closely and you see the wheel pushed backwards a little after every tick. That is the recoil, and it wears the steel. Our anchor's faces were pitted where the teeth had landed for a century.\n\nI stoned the faces smooth and shifted the anchor so the teeth meet fresh metal. The tick is crisper than I have ever heard it. The clock lost four minutes the following week."
+        },
+        {
+          "title": "Thirteen Feet of Pendulum",
+          "text": "The pendulum of the Emberwick tower clock is thirteen feet long and takes two full seconds over each swing. Its bob is a lump of cast iron as heavy as a grown sheep. The whole thing hangs by a strip of spring steel no wider than two fingers, from a bracket bolted to the great oak beam that crosses the clock room and carries a good deal else besides.\n\nI am Hester Brannock, the keeper, and this week I examined all of it. The steel strip has no crack. The rating nut is tight. One full turn of that nut alters the clock by about half a minute a day, and nobody has touched it.\n\nBesides, a fault in a pendulum makes a clock wrong all the time. Mine is wrong only some of the time. I am looking in the wrong place."
+        },
+        {
+          "title": "Heat, Cold and Iron",
+          "text": "Iron grows in the warm. A pendulum rod thirteen feet long, like the one in the Market Hall tower at Emberwick, is a hair longer on a hot afternoon than on a frosty morning, and a longer pendulum swings slower. In a warm spell our clock loses perhaps five seconds a day.\n\nFine clocks cure this with a gridiron pendulum, built of brass and steel rods side by side so that one metal's stretching lifts the bob as the other's lowers it. Ours has a plain rod and always has had.\n\nI hung a thermometer in the clock room and wrote down the readings for a month. The slow weeks were not the warm weeks. And five seconds a day is half a minute a week at most, not four minutes. So it is not the weather, though I enjoyed blaming it."
+        },
+        {
+          "title": "Out to the Dials",
+          "text": "A tower clock shows its face a long way from its works. From the movement in Emberwick's clock room a long rod runs up to a set of bevel gears, which turn it through a corner and send it out to the two dials, one facing the Market Square and one the river. Behind each dial sits the motion work, the gearing that turns the hour hand once for every twelve turns of the minute hand.\n\nI wondered whether a hand was slipping on its arbor when the wind got up. So I compared both outside dials with the small setting dial on the movement itself, on a slow week.\n\nAll three agreed to the minute, and all three were wrong together. The fault is not in the face of the clock. It is somewhere in its heart, where I have already looked twice."
+        },
+        {
+          "title": "The Log Book",
+          "text": "I have kept the Emberwick tower clock for nineteen years and never before kept a daily log of it. For six weeks now I have climbed the stair every morning and compared the clock with my own regulator at home, which is good to a second a day.\n\nThe pattern is plain once it is written in columns. From Thursday morning to Wednesday evening the clock keeps excellent time. Every minute it has lost, it has lost between Wednesday evening and Thursday morning. On two Wednesdays out of the six it lost nothing at all.\n\nA clock has no notion of the days of the week. Iron and brass do not know a Wednesday from a Sunday. People do. Something is happening in my tower on Wednesday nights, and I think it has very little to do with gears."
+        },
+        {
+          "title": "A Better Escapement",
+          "text": "Word of my trouble with the Emberwick clock has reached Mr. Lucius Varden, clockmaker of Netherby, who has written me four pages. He blames the old anchor escapement and recommends a deadbeat.\n\nHe explains it well. In a deadbeat the pallets are curved so that the escape wheel, once caught, stands perfectly still until it is released. There is no recoil, less wear, and the pendulum is troubled far less. A clock so fitted may keep time to a few seconds a week.\n\nI do not doubt him. But a poor escapement is poor every day, and my clock is at fault only on Wednesday nights. I also checked the striking train, which has its own weight and its own wheels and cannot rob the going train of anything. I have thanked Mr. Varden and kept his drawing. It is a handsome drawing."
+        },
+        {
+          "title": "Dust, Oil and Jackdaws",
+          "text": "When in doubt, clean. I took down the going train of the Emberwick tower clock on a Monday, washed every pivot, pegged out every hole, picked a quantity of jackdaw feathers from the frame and oiled the lot afresh. The clock ran as sweetly as I have ever known it. On Wednesday night it lost three and a half minutes.\n\nSo I went back to my log and looked at the two Wednesdays when it lost nothing. One was the week of the Goose Fair. The other was the week the bell ringers took their outing to the Grey Coast.\n\nThe ringers practise in this tower every Wednesday evening, six bells for an hour and a half, except when there is a fair or an outing. And in March, I remember now, the great tenor bell was rehung after thirty years of standing idle."
+        },
+        {
+          "title": "A Night in the Tower",
+          "text": "On Wednesday I sat up in the clock room of the Market Hall tower with a lantern, a flask of tea and my watch. At seven the ringers began in the chamber below, and the six bells of Emberwick woke over my head.\n\nWhen the tenor was swinging full circle, the lantern on its hook began to sway. I laid my hand on the great oak beam and felt it tremble in time with the bell. The pendulum hangs from that beam. Its even swing shrank and faltered, and every so often a pallet failed to clear its tooth, and the escape wheel waited a beat.\n\nEach missed beat is two seconds. I counted a hundred and twenty of them before the ringing stopped. That is four minutes. My clock was never faulty. It was being rocked like a cradle."
+        },
+        {
+          "title": "A Bracket in the Wall",
+          "text": "The cure for the Emberwick clock was never to silence the tenor bell, though Ned Fallow, the ringers' captain, went pale when he thought I might ask. The cure was to hang the pendulum from something the bells cannot move.\n\nAldous Pike the smith forged me an iron bracket two feet deep. We let it into the north wall of the tower with four bolts set in lead. That wall is four feet of stone and has never noticed a bell in its life.\n\nOn Monday I stopped the clock for the first time in nineteen years and chalked an apology on the Market Hall door. I moved the suspension spring and the thirteen-foot pendulum from the oak beam to the new bracket, lengthened the crutch by an inch, set the clock in beat and started it at noon."
+        },
+        {
+          "title": "Wednesday, and All's Well",
+          "text": "The first Wednesday after the pendulum was moved, I sat up in the Emberwick clock room again. The tenor bell swung. The lantern swayed and the oak beam trembled as before. The pendulum, hanging now from stone, did not care in the least.\n\nOn Thursday morning the clock agreed with my regulator to within three seconds. In the six weeks since, it has strayed eleven seconds altogether. The baker has stopped glaring. Nobody else has said a word, which is the highest praise a town clock ever gets.\n\nThe ringers have asked me to their supper, and Mr. Varden of Netherby still writes about deadbeat escapements. I am closing this notebook and leaving it in the clock room cupboard for the next keeper, with one line underlined. When a clock goes wrong only sometimes, look at what else lives in the building."
+        }
+      ]
+    },
+    {
+      "name": "Automata Explained",
+      "volumes": [
+        {
+          "title": "A Box Marked Unfinished",
+          "text": "An automaton is a clock that has been given something better to do than tell the time. Inside there is a spring for strength, a train of wheels for pace, and a set of cams for memory. That is all, and it is enough to make a brass figure write its name.\n\nI am Barnaby Thistlewood. For twenty years I worked beside Coralie Vane in her shop on Lantern Row, Emberwick. She died last winter and left me her tools, her cat, and a wooden box labelled in her hand: Song thrush. Unfinished.\n\nIn the box are a brass frame the size of a matchbox, a spring barrel, two bellows without their leather, four blank cams, and a small bird's body in bare copper. There are no drawings. She never wrote anything down. I mean to finish the bird, and to write everything down."
+        },
+        {
+          "title": "The Spring and the Fusee",
+          "text": "Every automaton needs a motor, and the motor of the song thrush I am finishing for my late teacher, Coralie Vane, is a coiled steel spring in a brass barrel.\n\nSprings have one bad habit. They pull hard when fully wound and feebly when nearly run down. A bird driven so would start its song in a rush and finish in a drawl. The cure is the fusee, a cone-shaped pulley with a spiral groove. A fine chain runs from the barrel to the cone. When the spring is strong it pulls on the narrow end, where it has little leverage. As it weakens, the chain reaches the wide end and the leverage grows. The force comes out even.\n\nCoralie had made the fusee. The chain was missing. I spent nine evenings making one, a hundred and sixty links, each smaller than a poppy seed."
+        },
+        {
+          "title": "The Fly Sets the Pace",
+          "text": "Wind a spring and let it go, and it will spend itself in one angry whirr. Something must hold the pace. In clocks that is the pendulum. In an automaton, which has to run smoothly rather than in ticks, it is the fly.\n\nThe fly is a little two-bladed fan at the fast end of the wheel train. The faster it spins, the harder the air pushes back, so it settles at a steady speed and holds everything behind it to that speed. Turn the blades flat to the air and the machine slows. Turn them edge on and it hurries.\n\nThe fly in Coralie Vane's unfinished thrush has brass blades the size of a fingernail. I have set them so the main arbor turns once in twenty seconds. Her cat watches the fly with deep professional interest. I work with the door shut."
+        },
+        {
+          "title": "Cams, or Brass Memory",
+          "text": "A cam is a disc whose edge has been cut into hills and valleys. A small steel finger, the follower, rests on that edge. As the disc turns the finger rises and falls, and a wire from the finger moves something else: a beak, a tail, a valve. The shape of the edge is the whole instruction. An automaton remembers nothing that has not been filed into brass.\n\nThe song thrush I am building in Emberwick, from the box my teacher Coralie Vane left me, needs four cams on one arbor. One works the bellows, one the pitch of the whistle, one the beak and one the tail.\n\nCoralie left four blanks, perfectly round and perfectly smooth. They remember nothing yet. Before I cut a single valley I must know exactly what a thrush does, and for that I shall have to get up early."
+        },
+        {
+          "title": "A Pair of Small Bellows",
+          "text": "A mechanical bird needs lungs. In the song thrush I am finishing on Lantern Row they are two wedge-shaped bellows, each about the size of a folded visiting card, made of thin pearwood boards hinged at one end and covered with the finest kid leather.\n\nThey work turn about. As one fills, the other empties, so the wind never stops. Both blow into a third, smaller bellows with a light spring on top, which steadies the pressure. Inside, flaps of leather act as valves and let the air go one way only.\n\nMy teacher Coralie Vane left the boards cut and the leather not. I used hot hide glue, and my first pair leaked at the corners where the leather folds. So did my second. The third held. Squeezed beside the ear, it makes a sound like a mouse sighing."
+        },
+        {
+          "title": "The Whistle with a Piston",
+          "text": "There is no room inside a small mechanical bird for a row of pipes. The thrush I am completing from Coralie Vane's box of parts has one whistle only, a brass tube shorter than a matchstick and about as thick as a straw.\n\nThe trick is in its far end, which is closed by a sliding piston. Push the piston in and the column of air shortens, so the note rises. Draw it out and the note falls. One cam slides the piston. Another opens and shuts a tiny valve to chop the wind into separate notes. Because the pitch slides rather than steps, the whistle can swoop and trill as a real bird does.\n\nI tried it by mouth this morning. It gives a full octave and a little over, from a low chirp to a squeak that sent the cat under the dresser."
+        },
+        {
+          "title": "Listening in the Orchard",
+          "text": "For nine mornings in April I sat in the orchard behind Emberwick mill before it was light, with a notebook on my knee, listening to a song thrush on top of a pear tree.\n\nA thrush sings a short phrase and then says it again, sometimes a third time, before going on to a new one. That habit of repeating is how you tell it from a blackbird. I drew each phrase as a line that climbed and dipped, chose the five I liked best, and gave each one twice.\n\nThen I marked those lines round the edge of a blank cam and began to file. High ground for high notes, valleys for low. You file a stroke, try it against the follower, and file again. The song took eleven days. Brass that has been removed cannot be put back."
+        },
+        {
+          "title": "Beak, Tail and Linkages",
+          "text": "The copper body my teacher Coralie Vane left in her box has a beak hinged on a pin as fine as a bristle and a tail that rocks on a pivot. Making them move in time with the song has been this month's work in my Emberwick shop.\n\nFine steel wires run down inside the bird's hollow legs to the mechanism in the base. Each wire ends in a lever, and each lever rides on a cam. The levers multiply. A rise on the cam no thicker than a playing card opens the beak a full eighth of an inch.\n\nThe beak must open for every note and close in the pauses. The tail flicks once at the end of each phrase. I adjust by putting tiny kinks in the wires. At present the bird is bald, and looks like a kettle with ambitions."
+        },
+        {
+          "title": "Feathers, Honestly Come By",
+          "text": "Coralie Vane, who taught me the making of automata, had one firm rule about feathers. They must be real, and they must never come from a bird that still needed them.\n\nSo all through late summer I gathered moulted feathers under the orchard hedge at Emberwick mill, and Mrs. Peabody's speckled hens supplied the pale ones for the breast when they dropped them. Each feather is trimmed and glued on singly, beginning at the tail and working forward, overlapping like slates on a roof so that no join shows. There are about three hundred.\n\nThe breast spots of a song thrush are shaped like small arrowheads. I painted them with a brush of three hairs. Two black glass beads made the eyes. When I had finished, the cat sat and stared at the bird for an hour, which I take as my first review."
+        },
+        {
+          "title": "The First Song",
+          "text": "Today I put the whole thrush together: spring, fusee, fly, bellows, whistle and four cams in the base, and the feathered bird on its perch above. I gave the key eight turns and let go the catch.\n\nThe fly whirred. The bellows puffed. The beak opened, and out came a wheeze. Then the song, but spoiled. Every phrase began with a gasp of wind and no note, and the beak opened a moment after the sound, like a man laughing late at a joke.\n\nI have checked each part against my notes, here in the shop on Lantern Row, and each part does what it should. Together they do not. A week of adjusting has made things worse, then the same. I have put the bird under a glass dome and gone back to Coralie Vane's empty box, to see what I missed."
+        },
+        {
+          "title": "Written Under the Lining",
+          "text": "The box in which Coralie Vane left me her unfinished thrush is lined with green baize. This morning I lifted a corner of it, hunting a dropped screw, and found pencil on the bare wood beneath, in her small square hand. She must breathe before she sings. Bellows a sixteenth ahead.\n\nThere was my fault. I had pinned all four cams to start together, so the whistle opened before the bellows had gathered any wind. A living bird fills its chest first. I turned the bellows cam a sixteenth of a turn ahead of the rest and pinned it again, and I advanced the beak cam a hair so the beak opens just before each note.\n\nIt was one day's work after a month of despair. In forty years she wrote down one thing, and she hid it where only a man who drops screws would find it."
+        },
+        {
+          "title": "A Thrush on Lantern Row",
+          "text": "On the first mild morning of March I wound the mechanical thrush, stood it in the open window of the shop on Lantern Row, and let go the catch.\n\nThe bellows filled. The beak opened and the song came out clean: five phrases, each given twice, carrying to the end of the street. The tail flicked. The baker's boy stopped dead with his tray. At the second winding a real thrush answered from the chimney opposite, and the two of them argued for the rest of the hour.\n\nUnder the base I have engraved two lines. Begun by Coralie Vane. Finished by Barnaby Thistlewood. Her box is back on the shelf with a new label: Song thrush. Finished. Everything in it is now written down, as I promised. The cat has been told, more than once, that the bird is not food."
+        }
+      ]
+    },
+    {
+      "name": "Repairs for Stubborn Clocks",
+      "volumes": [
+        {
+          "title": "The Clock Never Wrong",
+          "text": "I am Dorcas Wimble, and I mend clocks at the Sign of the Brass Hand in Kettle Row, Emberwick. In my experience the clock is seldom the stubborn party. This book records twelve customers who proved it.\n\nThe first was Mr. Ambrose Tulk, whose longcase clock had never been wrong in forty years and was not wrong now, he said, merely stopped. He had moved it across the parlour to make room for a harmonium. The floor slopes there. A leaning clock ticks unevenly, like a limp, and soon gives up.\n\nI slid two slips of cedar under one foot until the tick and the tock came even. Mr. Tulk said this proved the floor was at fault and not the clock. I agreed, and charged him for the floor. My own shop clock, I notice, is two minutes slow. I must see to that."
+        },
+        {
+          "title": "Miss Larch Wants Silence",
+          "text": "Miss Evadne Larch came to my shop in Kettle Row three times in one week about a mantel clock in perfect health. Her complaint was that it ticked. More exactly, it ticked at her.\n\nI explained that a clock which does not tick does not go. She was not persuaded. So I walked round to her house and listened, and she was right. The clock stood on a hollow sideboard, and the sideboard was acting as a drum. You could hear the thing from the garden gate.\n\nI cut a square of thick felt and set the clock on it. The tick sank to a murmur. Miss Larch returned next morning to say that now she could not tell whether it was going. We settled on thinner felt. I charged for both pieces, and I consider that I earned it."
+        },
+        {
+          "title": "The Twins Who Overwound It",
+          "text": "Osbert and Oswald Pottle share their late mother's eight-day clock and very little else. They carried it into my shop in Emberwick between them, each explaining that the other had overwound it.\n\nThere is no such thing. A clock wound to the top that will not go is not too tight. It is too dirty or too dry to use the power it has. The Pottle clock had not been cleaned in thirty years, and its oil had turned to something like toffee. I washed it, pegged the holes, oiled it properly, and it went.\n\nThe brothers then fell out over whose turn it was to wind. I pinned a card inside the case door with fifty-two Sundays and their initials turn about. They disputed who should go first. I tossed a trouser button. Osbert has demanded a recount."
+        },
+        {
+          "title": "Thirteen Cuckoos at Greaves Farm",
+          "text": "Hob Greaves farms on the edge of the Lowlands and owns a cuckoo clock that called thirteen at noon and wheezed the rest of the day. He would not let it leave his kitchen, and he would pay only in eggs. So I, Dorcas Wimble, mended it on his table, watched by a hen.\n\nA cuckoo's voice is two small bellows, each sitting on its own pipe, one for each note. Mice had eaten the cover off one bellows. I re-covered it with thin kid leather. The thirteenth cuckoo was a worn notch in the count wheel, which let the lever skip a place. I filed the notch square again.\n\nI went home with two dozen eggs. Jory, my errand-girl, tells me that people set their watches by our shop clock and are then two minutes late for everything. I know. I shall see to it."
+        },
+        {
+          "title": "Mrs. Sibley's Goose Grease",
+          "text": "Mrs. Hepzibah Sibley has oiled her own kitchen clock every Sunday for eleven years, with goose grease, on the principle that what is good for a chest is good for a clock. It arrived at my shop in Kettle Row stopped solid.\n\nGoose grease stiffens in the cold and creeps in the warm. It had crept everywhere and gathered every speck of dust in her kitchen. Washing it out took two days and most of my patience.\n\nThe difficulty was not the clock. Mrs. Sibley was affronted at being asked to stop, and a customer who feels useless will find something worse to do. So I told her the movement wants nothing for three years, but the case wants beeswax every Sunday without fail. She has taken to it with great devotion. That clock now shines like a conker and keeps excellent time."
+        },
+        {
+          "title": "The Schoolroom Clock Runs Fast",
+          "text": "Mr. Crispin Vole, schoolmaster of Emberwick, declared that his schoolroom clock had gained ten minutes a week ever since I last cleaned it, and that I should put it right for nothing.\n\nI found the movement in good order. The fault was lower down. The rating nut under the pendulum bob had been screwed up, raising the bob, and a shorter pendulum swings faster. There were also small fingerprints in the dust inside the case door, at about the height of a ten-year-old. I set it right. The next week it was fast again.\n\nI fitted a lock to the case door, gave Mr. Vole the key, and blamed vibration. Lessons now end when they should, and I am not well thought of among the under-twelves. Mr. Vole observed, on leaving, that my own shop clock is two minutes slow. So it is."
+        },
+        {
+          "title": "Captain Marrin's Eight Bells",
+          "text": "Captain Ysolde Marrin, retired from the Grey Coast packet boats, keeps a ship's clock on her parlour wall. It strikes as clocks do at sea: one bell at the first half hour of a watch, another added every half hour, up to eight bells, and then round again.\n\nThe clock was not at fault. Her sister, who lives with her, could not tell the time by it and wanted it mended to strike like a decent clock. The Captain forbade me to touch the strike and ordered me to do something.\n\nSo I mended the sister. I wrote out a card in my best hand, showing bells against hours, framed it, and hung it beside the clock. Within a week she was announcing that it had gone six bells and the kettle should be on. I charged for one frame."
+        },
+        {
+          "title": "The Alderman's Estimate",
+          "text": "Alderman Josiah Roke brought in the clock from the council committee room, whose mainspring had broken with a bang during a debate about drains. He wanted it back by yesterday and thought I might do the work for nothing, as a civic honour.\n\nI, Dorcas Wimble of Kettle Row, wrote him an estimate in three lines. New mainspring. Cleaning. Honour, no charge. He offered half the total. I offered to fit half a spring.\n\nA mainspring cannot be patched. Once it has snapped you fit a new one of the same height, thickness and strength, or the clock runs badly ever after. He paid in full, slowly, in very small coins. Now whenever he passes my window he consults my shop clock, consults his watch, and shakes his head. It is two minutes slow. He is quite right, which is the annoying part."
+        },
+        {
+          "title": "Tamsin Reed Asks Why",
+          "text": "Tamsin Reed is nine. She brought me her grandfather's old alarm clock and four pennies tied in a handkerchief, and she would not leave either. She sat on a stool by my bench in Kettle Row and asked why at every screw.\n\nWhy is the spring blue? Because the steel was heated until it turned that colour, which makes it tough. Why does the little wheel go back and forth? Because a hairspring pulls it home each time. Why is there a button inside?\n\nThere should not have been. A shirt button was wedged between two wheels. Tamsin remembered posting it through the back when she was four, to see whether the clock was hungry. Out it came, and the clock ran. I charged one penny and told her to come back on Saturdays. She is the only customer this year I have invited to return."
+        },
+        {
+          "title": "Mr. Hask Improves Things",
+          "text": "Mr. Lucian Hask mends his own clocks and then brings them to me, Dorcas Wimble, to be mended back. He stands at my elbow throughout and explains what he did.\n\nThis time he had replaced a broken suspension spring with a strip of corset steel and a click spring with a bent hairpin. A cracked wheel tooth was buried under a blob of solder the size of a pea. All three worked, after a fashion, for a fortnight.\n\nA broken tooth is properly mended by cutting a small slot in the wheel, letting in a slip of new brass, and filing it to match its neighbours. I let him watch. I returned the hairpin in an envelope. He is a nuisance, but he loves clocks, and I have lent him my second-best file. He will be back by spring, and so will the file, I hope."
+        },
+        {
+          "title": "The Clock Kept Stopped",
+          "text": "Mrs. Nan Orrery was marched into my shop in Kettle Row by her daughter, carrying a mantel clock that had stood at ten past four for six years. The daughter wanted it going. Mrs. Orrery did not.\n\n“Ten past four is when Walter came in for his tea,” she said. “I like it there.”\n\nA clock is a machine and ought to be kept sound. Whether it runs is the owner's business. I cleaned and oiled the movement so that nothing in it will rust or seize, ran it a full day on my bench to be sure, then let it run down and set the hands back to ten past four. I told the daughter it was in perfect order and resting. She was not pleased. Mrs. Orrery pressed my hand at the door, and I did not charge for the hands."
+        },
+        {
+          "title": "The Twelfth Customer",
+          "text": "On the last Monday of the year I came down to find a repair ticket tied to my own shop clock, in the handwriting of Jory Sprott, my errand-girl. Customer: Mrs. D. Wimble. Fault: two minutes slow all year. Says she will see to it. Difficult.\n\nI took the clock down. It was clean, in beat and without fault. Then Mr. Tulk came in about his floor and shut the door the way my customers do, and I saw the pendulum shudder. The clock hung on the thin partition beside the door. Every slam had jarred it and cost it a moment. A year of stubborn customers makes a great many slams.\n\nI moved the clock to the chimney breast, which is solid brick, and nailed a leather pad to the door frame. It has kept time since. I paid Jory the price of the repair. She had earned it."
+        }
+      ]
+    }
+  ]
+}
