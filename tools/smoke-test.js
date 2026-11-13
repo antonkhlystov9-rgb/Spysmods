@@ -1,147 +1,130 @@
-// Headless smoke test: boots the game in Chromium, plays levels automatically, and checks for errors.
-// Usage: node tools/smoke-test.js [screenshot-dir]
+// Headless smoke test: boots the game in Chromium, plays it through its real pick/shelve code, and checks for errors.
+// Usage: node tools/smoke-test.js [screenshot-dir]     (needs Playwright)
 const path = require('path');
 const { chromium } = require('playwright');
 
 (async () => {
   const shots = process.argv[2];
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
   const shot = async (name) => { if (shots) await page.screenshot({ path: path.join(shots, name + '.png') }); };
   const assert = (ok, msg) => { if (!ok) { errors.push('assert: ' + msg); console.log('FAIL', msg); } else console.log('ok  ', msg); };
+  const ev = (fn, arg) => page.evaluate(fn, arg);
+  const wait = (ms) => page.waitForTimeout(ms);
+  // software rendering is slow, so wait on game state rather than the clock
+  const frames = (n = 3) => ev((k) => new Promise((res) => { let i = 0; const f = () => (++i >= k ? res() : requestAnimationFrame(f)); requestAnimationFrame(f); }), n);
+  const landed = async () => { for (let i = 0; i < 400; i++) { if (!(await ev(() => TH.Game.debug.books.some((b) => b.st === 'fly')))) break; await wait(100); } await frames(2); };
 
   await page.goto('file://' + path.resolve(__dirname, '..', 'src', 'index.html'));
-  await page.waitForTimeout(600);
-  const info = await page.evaluate(() => ({ items: TH.ITEM_LIST.length, levels: TH.LEVELS.length, ach: TH.ACH.length, ids: new Set(TH.ITEM_LIST.map((i) => i.id)).size, names: new Set(TH.ITEM_LIST.map((i) => i.name)).size }));
+  await wait(900);
+  const info = await ev(() => ({ books: TH.BOOKS.length, series: TH.SERIES.length, cats: TH.CATS.length, titles: new Set(TH.BOOKS.map(TH.bookTitle)).size, names: new Set(TH.SERIES.map((s) => s.name)).size, ach: TH.ACH.length, pre: TH.shelvedCount() }));
   console.log(info);
-  assert(info.items === 480 && info.ids === 480, '480 unique item ids');
-  assert(info.names === 480, '480 unique item names');
-  assert(info.levels === 44, '44 levels');
-
-  // every item sprite draws without throwing and is not blank
-  const blank = await page.evaluate(() => TH.ITEM_LIST.filter((i) => {
-    const s = TH.Draw.sprite(i.id, false), d = s.getContext('2d').getImageData(0, 0, s.width, s.height).data;
-    let n = 0; for (let k = 3; k < d.length; k += 4) if (d[k] > 0) n++;
-    return n < 1500;
-  }).map((i) => i.id));
-  assert(blank.length === 0, 'all sprites render (' + blank.join(',') + ')');
-  // every level: bin capacities add up to the item count
-  const bad = await page.evaluate(() => TH.LEVELS.filter((l) => l.items.some((id) => !l.bins.find((b) => b.key === TH.keyOf(TH.ITEMS[id], l.rule)))).map((l) => l.id));
-  assert(bad.length === 0, 'every item has a bin in every level');
-
+  assert(info.books === 1152 && info.titles === 1152, '1,152 books with unique titles');
+  assert(info.series === 96 && info.names === 96 && info.cats === 24, '96 series in 24 sections');
+  assert(info.pre > 60 && info.pre < 230, 'a new library starts partly shelved (' + info.pre + ')');
   await shot('01-title');
-  await page.click('[data-act="continue"]');
-  await page.waitForTimeout(1500);
-  await shot('02-level-start');
 
-  // a real drag with the mouse: one wrong, one right
-  const drag = await page.evaluate(() => {
-    const G = TH.Game, cv = document.getElementById('cv'), r = cv.getBoundingClientRect();
-    const toScreen = (x, y) => ({ x: r.left + x / 1600 * r.width, y: r.top + y / 900 * r.height });
-    const it = G.pile.slice().sort((a, b) => b.z - a.z)[0];
-    const right = G.bins.find((b) => b.key === it.def.cat), wrong = G.bins.find((b) => b.key !== it.def.cat);
-    return { from: toScreen(it.x, it.y), right: toScreen(right.x + right.w / 2, right.y + right.h / 2), wrong: toScreen(wrong.x + wrong.w / 2, wrong.y + wrong.h / 2), id: it.id };
-  });
-  await page.mouse.move(drag.from.x, drag.from.y); await page.mouse.down();
-  await page.mouse.move(drag.wrong.x, drag.wrong.y, { steps: 8 });
-  await page.waitForTimeout(150); await shot('03-dragging');
-  await page.mouse.up(); await page.waitForTimeout(700);
-  assert(await page.evaluate(() => TH.Game.mistakes) === 1, 'wrong drop counts as a mistake');
-  const again = await page.evaluate((id) => {
-    const G = TH.Game, cv = document.getElementById('cv'), r = cv.getBoundingClientRect();
-    const it = G.pile.find((p) => p.id === id);
-    return { x: r.left + it.x / 1600 * r.width, y: r.top + it.y / 900 * r.height, top: G.pile.every((p) => p === it || p.z < it.z || Math.hypot(p.x - it.x, p.y - it.y) > 50) };
-  }, drag.id);
-  await page.mouse.move(again.x, again.y); await page.mouse.down();
-  await page.mouse.move(drag.right.x, drag.right.y, { steps: 8 }); await page.mouse.up();
-  await page.waitForTimeout(700);
-  assert(await page.evaluate(() => TH.Game.landed) === 1, 'correct drop lands in the crate');
+  await page.click('[data-act="enter"]'); await wait(700);
+  assert(await ev(() => TH.Game.mode === 'play'), 'game starts');
 
-  // abilities
-  await page.evaluate(() => { TH.Save.data.stars['x1'] = 50;   /* temporary: unlock every ability */ for (const a of TH.ABIL) TH.Game.charge[a.id] = a.need; });
-  await page.keyboard.press('Digit2'); await page.waitForTimeout(900);
-  assert(await page.evaluate(() => TH.Game.landed) >= 5, 'Broom Breeze sorts items');
-  await page.keyboard.press('Digit1');
-  const mg = await page.evaluate(() => {
-    const G = TH.Game, r = document.getElementById('cv').getBoundingClientRect(), sx = r.width / 1600, sy = r.height / 900;
-    const counts = {}; G.pile.forEach((p) => { counts[p.def.cat] = (counts[p.def.cat] || 0) + 1; });
-    const cat = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
-    const it = G.pile.filter((p) => p.def.cat === cat).sort((a, b) => b.z - a.z)[0]; it.z = 1e6;
-    const bin = G.bins.find((b) => b.key === cat);
-    return { fx: r.left + it.x * sx, fy: r.top + it.y * sy, tx: r.left + (bin.x + bin.w / 2) * sx, ty: r.top + (bin.y + bin.h / 2) * sy, before: G.placed, same: counts[cat] };
-  });
-  await page.mouse.move(mg.fx, mg.fy); await page.mouse.down(); await page.mouse.move(mg.tx, mg.ty, { steps: 6 }); await page.mouse.up();
-  await page.waitForTimeout(900);
-  const pulled = await page.evaluate((b) => TH.Game.placed - b, mg.before);
-  assert(mg.same < 2 || pulled >= 2, 'Magnet Mitt pulls matching items (' + pulled + ' placed from ' + mg.same + ' matching)');
-  await page.evaluate(() => { TH.Game.charge.lantern = 99; });
-  await page.keyboard.press('Digit4');
-  const ln = await page.evaluate(() => {
-    const G = TH.Game, r = document.getElementById('cv').getBoundingClientRect(), sx = r.width / 1600, sy = r.height / 900;
-    const it = G.pile.filter((p) => !p.an).sort((a, b) => b.z - a.z)[0]; it.z = 2e6;
-    const bin = G.bins.find((b) => b.key !== it.def.cat);
-    return { fx: r.left + it.x * sx, fy: r.top + it.y * sy, tx: r.left + (bin.x + bin.w / 2) * sx, ty: r.top + (bin.y + bin.h / 2) * sy, m: G.mistakes, placed: G.placed };
-  });
-  await page.mouse.move(ln.fx, ln.fy); await page.mouse.down(); await page.mouse.move(ln.tx, ln.ty, { steps: 6 }); await page.mouse.up();
-  await page.waitForTimeout(600);
-  assert(await page.evaluate((o) => TH.Game.mistakes === o.m && TH.Game.placed === o.placed + 1, ln), 'Guiding Lantern redirects a wrong drop');
-  await shot('04-mid-level');
+  // --- walking and looking (no mouse capture in headless, so right-drag looks) ---
+  const p0 = await ev(() => { const D = TH.Game.debug; D.stand(0.8, 1.0); D.lookAt(6, 1.62, 1.0); return { x: D.P.x, yaw: D.P.yaw }; });
+  await page.keyboard.down('KeyW'); await frames(4); await page.keyboard.up('KeyW');
+  const p1 = await ev(() => TH.Game.debug.P.x);
+  assert(p1 > p0.x + 0.5, 'W walks forward (' + (p1 - p0.x).toFixed(2) + ' m)');
+  await page.keyboard.down('KeyA'); await frames(40); await page.keyboard.up('KeyA');
+  assert(await ev(() => TH.Game.debug.P.z > -4 && TH.Game.debug.P.z < 4), 'walls stop you');
+  await page.mouse.move(800, 450); await page.mouse.down({ button: 'right' }); await page.mouse.move(900, 450, { steps: 4 }); await page.mouse.up({ button: 'right' }); await frames();
+  assert(await ev((y) => TH.Game.debug.P.yaw !== y, p0.yaw), 'mouse turns the view');
 
-  // finish this level automatically
-  const finish = async () => {
-    for (let i = 0; i < 400; i++) {
-      const done = await page.evaluate(() => { TH.Game.autoStep(); return TH.Game.done; });
-      if (done) break;
-      await page.waitForTimeout(30);
-    }
-    await page.waitForSelector('#modal .stars', { timeout: 8000 });
-  };
-  await finish();
-  await page.waitForTimeout(1300);
-  await shot('05-level-done');
-  await page.evaluate(() => { delete TH.Save.data.stars.x1; });
-  assert(await page.evaluate(() => TH.Save.data.stars['pantry-1'] >= 1), 'level result is saved');
+  // --- pick up a real book by aiming at it ---
+  await ev(() => { const D = TH.Game.debug, pl = D.piles.find((x) => x.wing === 0 && x.y0 < 0.1 && x.books.length > 3), top = D.books[pl.books[pl.books.length - 1]]; D.stand(pl.x - 0.9, pl.z + 0.45); D.lookAt(top.pos.x, top.pos.y, top.pos.z); });
+  await frames(); await shot('02-aim-pile');
+  assert(await ev(() => TH.Game.aim && TH.Game.aim.type === 'pile'), 'crosshair finds a book in a pile');
+  await page.mouse.down(); await page.mouse.up(); await frames();   // a real left click on the canvas
+  const held = await ev(() => TH.Game.held.slice());
+  assert(held.length === 1, 'clicking picks the book up');
 
-  // play through every remaining level quickly to catch layout / logic errors
-  const total = await page.evaluate(() => TH.LEVELS.length);
-  for (let n = 1; n < total; n++) {
-    await page.click('[data-act="next"]');
-    await page.waitForTimeout(250);
-    if (n === 2 || n === 3 || n === 19 || n === 40 || n === 43) { await page.waitForTimeout(1300); await shot('lvl-' + (await page.evaluate(() => TH.Game.level.id))); }
-    await finish();
-  }
-  await page.waitForTimeout(1200);
-  await shot('06-finale');
-  assert(await page.evaluate(() => TH.totalStars() === TH.maxStars()), 'all levels completable (stars ' + await page.evaluate(() => TH.totalStars()) + ')');
-  await page.click('[data-act="tomap"]'); await page.waitForTimeout(400); await shot('07-rooms');
-  for (const [to, name] of [['catalog', '08-catalog'], ['ach', '09-achievements'], ['shop', '10-shop']]) {
-    await page.click('[data-act="back"]'); await page.click(`[data-act="go"][data-to="${to}"]`); await page.waitForTimeout(350); await shot(name);
-  }
-  await page.click('[data-act="upgrade"]'); await page.waitForTimeout(200);
-  assert(await page.evaluate(() => TH.Save.data.abil.magnet === 2), 'ability upgrade purchase works');
-  await page.click('[data-act="shoptab"][data-id="theme"]'); await page.click('[data-act="buytheme"]');
-  await page.click('[data-act="shoptab"][data-id="pet"]'); await page.click('[data-act="buypet"]'); await page.waitForTimeout(200); await shot('11-shop-pets');
+  // wrong shelf first, then the right one
+  await ev((id) => { const D = TH.Game.debug, b = D.books[id], cs = D.cases.find((c) => c.wing === 0 && c.id !== b.def.cat), r = cs.rows[1]; D.stand(cs.x, cs.z + cs.s * 1.6); D.lookAt(cs.x, r.y + 0.2, cs.z); }, held[0]);
+  await frames(); await ev(() => TH.Game.interact());
+  assert(await ev(() => TH.Save.data.stats.mistakes === 1 && TH.Game.held.length === 1), 'a wrong shelf counts as a mistake and keeps the book');
+  await ev((id) => { const D = TH.Game.debug, s = D.slot(id), cs = D.cases[D.books[id].def.cat]; D.stand(s.x + 0.4, cs.z + cs.s * 1.6); D.lookAt(s.x, s.y, s.z); }, held[0]);
+  await frames(); await shot('03-aim-shelf');
+  assert(await ev(() => TH.Game.aim && TH.Game.aim.type === 'row' && TH.Game.aim.cand >= 0), 'the right shelf offers to take the book');
+  await ev(() => TH.Game.interact()); await landed();
+  assert(await ev((id) => { const D = TH.Game.debug, b = D.books[id], s = D.slot(id); return b.st === 'shelf' && b.pos.distanceTo(s) < 0.001 && TH.Save.data.shelved[id] === 1 && TH.Game.held.length === 0; }, held[0]), 'the book lands in its exact slot');
+
+  // right-click grabs every book of one section from a pile
+  await ev(() => { const D = TH.Game.debug, pl = D.piles.filter((x) => x.wing === 0 && x.y0 < 0.1 && x.books.length > 4).pop(), top = D.books[pl.books[pl.books.length - 1]]; D.stand(pl.x - 0.9, pl.z + 0.45); D.lookAt(top.pos.x, top.pos.y, top.pos.z); });
+  await frames(); await ev(() => TH.Game.grabAll()); await frames();
+  assert(await ev(() => { const h = TH.Game.held; return h.length >= 1 && new Set(h.map((id) => TH.BOOKS[id].cat)).size === 1; }), 'grab-all takes one section only');
+  await shot('04-carrying');
+
+  // lost bookmark
+  await ev(() => { const D = TH.Game.debug, m = D.marks[2].group.position; D.stand(m.x + 0.9, m.z - 0.9); D.lookAt(m.x, m.y, m.z); });
+  await frames(); await ev(() => TH.Game.interact());
+  assert(await ev(() => TH.Save.data.stats.marks === 1), 'lost bookmark can be collected');
+
+  // --- fast-forward: the door opens at 60% ---
+  const fast = async (wing, until) => { for (let i = 0; i < 60; i++) { const done = await ev(([w, u]) => { for (let k = 0; k < 12; k++) { if (TH.shelvedCount(w) >= u) return true; if (!TH.Game.debug.auto(w)) return true; } return false; }, [wing, until]); if (done) break; await wait(60); } await landed(); };
+  assert(await ev(() => !TH.Game.debug.gates[0].open), 'door to wing 2 starts locked');
+  await ev(() => TH.Game.debug.flush()); await landed();
+  await fast(0, 175);
+  assert(await ev(() => TH.Game.debug.gates[0].open && TH.Save.data.gates[0] === 1), 'door opens at 60% shelved');
+  await fast(0, 288); await shot('05-wing-done');
+  assert(await ev(() => TH.Save.data.stats.rows === 24 && TH.Save.data.stats.cases === 6 && TH.Save.data.stats.wings === 1), 'rows, bookcases and the wing register as complete');
+  await fast(1, 288);
+  assert(await ev(() => TH.ABIL.every(TH.abilUnlocked)), 'all four knacks unlock from finished rows');
+
+  // --- knacks, in wing 3 ---
+  await ev(() => { const D = TH.Game.debug, cs = D.cases[12], r = cs.rows[2]; for (const a of TH.ABIL) TH.Save.data.charge[a.id] = a.need; D.stand(cs.x, cs.z + cs.s * 1.6); D.lookAt(cs.x, r.y + 0.2, cs.z); });
+  await frames(); await page.keyboard.press('Digit1'); await wait(400); await landed();
+  const called = await ev(() => TH.Game.held.map((id) => TH.BOOKS[id].cat));
+  assert(called.length === 3 && called.every((c) => c === 12), 'Call the Strays pulls 3 books of that section (' + called.length + ')');
+  await shot('06-knack');
+  await page.keyboard.press('Digit2'); await wait(1500); await landed();
+  assert(await ev(() => TH.Game.held.length === 0), 'Tidy Hands shelves what you carry');
+  await page.keyboard.press('Digit3'); await page.keyboard.press('Digit4'); await wait(100);
+  assert(await ev(() => TH.Game.fx.golden === 12 && TH.Game.fx.way > 30), 'Golden Hour and Wayfinder switch on');
+
+  // --- pause, in-game shop and settings ---
+  await page.keyboard.press('KeyP'); await wait(200);
+  assert(await ev(() => TH.Game.paused), 'P pauses'); await shot('07-pause');
+  await page.click('[data-act="go"][data-to="shop"]'); await wait(150); await shot('08-shop');
+  await page.click('[data-act="upgrade"]'); await page.click('[data-act="shoptab"][data-id="gear"]'); await page.click('[data-act="buygear"]'); await wait(100); await shot('09-gear');
+  assert(await ev(() => TH.Save.data.abil.gather === 2 && TH.Save.data.upg.satchel === 1 && TH.upgVal('satchel') === 7), 'shop upgrades apply');
+  await page.click('[data-act="shoptab"][data-id="mood"]'); await page.click('[data-act="buymood"]'); await wait(100);
   await page.click('[data-act="back"]'); await page.click('[data-act="go"][data-to="settings"]');
-  for (const t of ['game', 'controls', 'video', 'audio']) { await page.click(`[data-act="settab"][data-id="${t}"]`); await page.waitForTimeout(200); await shot('12-settings-' + t); }
-  // rebind a key
-  await page.click('[data-act="settab"][data-id="controls"]'); await page.click('[data-act="rebind"][data-id="shuffle"]'); await page.keyboard.press('KeyT');
-  assert(await page.evaluate(() => TH.Settings.controls.keys.shuffle === 'KeyT'), 'key rebinding works');
-  // endless + pause
-  await page.click('[data-act="back"]'); await page.click('[data-act="endless"]'); await page.waitForTimeout(1500); await shot('13-endless');
-  await page.keyboard.press('Escape'); await page.waitForTimeout(300); await shot('14-pause');
-  assert(await page.evaluate(() => TH.Game.paused), 'Esc pauses');
-  await page.click('[data-act="pausesettings"]'); await page.waitForTimeout(200); await page.click('[data-act="back"]'); await page.click('[data-act="resume"]');
-  await finish(); await page.waitForTimeout(600);
-  assert(await page.evaluate(() => TH.Save.data.stats.endless === 1), 'endless round completes');
-  // save survives a reload
-  await page.evaluate(() => TH.Save.flush());
-  await page.reload(); await page.waitForTimeout(500);
-  assert(await page.evaluate(() => TH.totalStars() === TH.maxStars() && TH.Save.data.pet === 'cat'), 'progress persists after reload');
-  console.log('achievements unlocked:', await page.evaluate(() => Object.keys(TH.Save.data.ach).length), '/', info.ach);
-  console.log('coins:', await page.evaluate(() => TH.Save.data.coins), 'earned:', await page.evaluate(() => TH.Save.data.stats.earned));
+  for (const t of ['game', 'controls', 'video', 'audio']) { await page.click(`[data-act="settab"][data-id="${t}"]`); await wait(120); await shot('10-settings-' + t); }
+  await page.click('[data-act="settab"][data-id="controls"]'); await page.click('[data-act="rebind"][data-id="grab"]'); await page.keyboard.press('KeyG');
+  assert(await ev(() => TH.Settings.controls.keys.grab === 'KeyG'), 'key rebinding works');
+  await page.click('[data-act="settab"][data-id="video"]'); await page.selectOption('select[data-path="video.quality"]', 'low'); await wait(300);
+  await page.selectOption('select[data-path="video.quality"]', 'high'); await wait(300);
+  assert(await ev(() => TH.Settings.video.quality === 'high'), 'graphics quality switches (renderer rebuilt)');
+  await page.click('[data-act="back"]'); await page.click('[data-act="go"][data-to="catalog"]'); await wait(150); await shot('11-catalogue');
+  await page.click('[data-act="back"]'); await page.click('[data-act="go"][data-to="ach"]'); await wait(150); await shot('12-achievements');
+  await page.click('[data-act="back"]'); await page.click('[data-act="resume"]'); await wait(300);
+  assert(await ev(() => !TH.Game.paused && TH.Game.mode === 'play'), 'resume returns to the game');
+  await ev(() => { const D = TH.Game.debug; D.stand(22, 1.2); D.lookAt(28, 1.5, -4); }); await frames(4); await shot('13-morning-mood');
+
+  // --- finish the library ---
+  await fast(2, 288); await fast(3, 288); await page.waitForSelector('#modal .dialog .tally', { timeout: 60000 });
+  await shot('14-finale');
+  assert(await ev(() => TH.shelvedCount() === 1152 && TH.Save.data.stats.cases === 24 && TH.Save.data.stats.rows === 96), 'every book can be shelved (24 bookcases, 96 rows)');
+  assert(await page.locator('#modal .dialog h2').innerText() === 'The library is in order', 'finale appears');
+  assert(await ev(() => TH.Game.debug.books.every((b) => b.st === 'shelf' && b.pos.distanceTo(TH.Game.debug.slot(b.id)) < 0.001)), 'all books sit in their own slots');
+
+  // --- persistence, reshuffle ---
+  await ev(() => TH.Save.flush());
+  await page.reload(); await wait(900);
+  assert(await ev(() => TH.shelvedCount() === 1152 && TH.Save.data.upg.satchel === 1 && TH.Settings.controls.keys.grab === 'KeyG'), 'progress and settings persist after reload');
+  await page.click('[data-act="go"][data-to="settings"]'); await page.click('[data-act="reshuffle"]'); await page.click('[data-act="yes"]'); await wait(400);
+  assert(await ev(() => TH.shelvedCount() < 230 && TH.Save.data.upg.satchel === 1 && TH.Save.data.stats.rounds === 1), 'reshuffle resets the shelves but keeps upgrades');
+  console.log('achievements unlocked:', await ev(() => Object.keys(TH.Save.data.ach).length), '/', info.ach, ' coins earned:', await ev(() => TH.Save.data.stats.earned));
 
   await browser.close();
   if (errors.length) { console.log('\nERRORS:\n' + errors.join('\n')); process.exit(1); }

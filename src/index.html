@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
-<title>Tidy Hollow</title>
+<title>The Night Shelver</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -12,7 +12,7 @@
 
 <div id="hud" class="hidden">
   <div class="hud-top">
-    <button class="btn icon-btn" data-act="pause" title="Pause"><span data-icon="pause"></span></button>
+    <button class="btn icon-btn touch-only" data-act="pause" title="Pause" aria-label="Pause">II</button>
     <div class="hud-title">
       <div id="hud-name"></div>
       <div id="hud-hint"></div>
@@ -25,10 +25,13 @@
     <div class="chip" id="hud-combo"><b>0</b><span>streak</span></div>
     <div class="chip coin"><span data-icon="coin"></span><b id="hud-coins">0</b></div>
   </div>
-  <div class="hud-bottom">
-    <div id="hud-abil"></div>
-    <button class="btn small ghost" data-act="shuffle" id="hud-shuffle"></button>
-  </div>
+  <div id="cross"></div>
+  <div id="target" class="hidden"><b></b><span></span></div>
+  <div id="flash" class="hidden"></div>
+  <div id="banner" class="hidden"><b></b><span></span></div>
+  <div id="lockhint" class="hidden">Click to look around</div>
+  <div id="held"></div>
+  <div class="hud-bottom"><div id="hud-abil"></div></div>
 </div>
 
 <div id="screens"></div>
@@ -37,9 +40,9 @@
 <div id="toasts"></div>
 <div id="fps" class="hidden"></div>
 
+<script src="vendor/three.min.js"></script>
 <script src="js/core.js"></script>
 <script src="js/data.js"></script>
-<script src="js/draw.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/progress.js"></script>
 <script src="js/game.js"></script>

@@ -1,4 +1,4 @@
-// Tidy Hollow — all sound is synthesised live (no audio files)
+// The Night Shelver — all sound is synthesised live (no audio files)
 (function () {
   'use strict';
   const TH = window.TH;
@@ -82,15 +82,15 @@
 
   // ---------- sound effects ----------
   const fx = {
-    pick() { tone(540, now(), 0.07, 'triangle', 0.1); noise(now(), 0.04, 0.05, 'highpass', 2500); },
+    pick() { tone(540, now(), 0.07, 'triangle', 0.08); noise(now(), 0.09, 0.07, 'bandpass', 1800, 1.5, null, 3600); },
     place(combo) {
       const step = Math.min(combo, 14), semi = PENT[step % 5] + 12 * Math.floor(step / 5);
       const f = 392 * Math.pow(2, semi / 12), t = now();
       tone(f, t, 0.24, 'triangle', 0.2); tone(f * 2, t, 0.14, 'sine', 0.07);
-      noise(t, 0.05, 0.12, 'lowpass', 900);
+      noise(t, 0.07, 0.2, 'lowpass', 420);
     },
     wrong() { const t = now(); tone(196, t, 0.2, 'sine', 0.22, null, 0.01, 130); tone(147, t + 0.02, 0.22, 'triangle', 0.1, null, 0.01, 98); },
-    drop() { noise(now(), 0.06, 0.08, 'lowpass', 500); },
+    step() { noise(now(), 0.08, 0.05, 'lowpass', 240 + Math.random() * 140); },
     bin() { arp([72, 76, 79, 84], 0.07, 0.35, 'triangle', 0.16); },
     level() { arp([60, 64, 67, 72, 76, 79, 84], 0.09, 0.7, 'triangle', 0.16); const t = now() + 0.7; [60, 64, 67, 72].forEach((n) => tone(midi(n), t, 1.6, 'sine', 0.09, null, 0.05)); },
     star(i) { const t = now(); tone(midi(79 + i * 4), t, 0.5, 'triangle', 0.18); tone(midi(91 + i * 4), t + 0.05, 0.4, 'sine', 0.08); },

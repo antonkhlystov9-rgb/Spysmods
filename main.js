@@ -1,4 +1,4 @@
-// Tidy Hollow — Electron main process
+// The Night Shelver — Electron main process
 const { app, BrowserWindow, ipcMain, screen, Menu } = require('electron');
 const path = require('path');
 
@@ -11,8 +11,8 @@ function createWindow() {
     minWidth: 960,
     minHeight: 540,
     useContentSize: true,
-    backgroundColor: '#2e2118',
-    title: 'Tidy Hollow',
+    backgroundColor: '#1d140d',
+    title: 'The Night Shelver',
     autoHideMenuBar: true,
     show: false,
     icon: path.join(__dirname, 'build', 'icon.png'),

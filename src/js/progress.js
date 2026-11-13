@@ -1,102 +1,96 @@
-// Tidy Hollow — abilities, shop goods, achievements and level results
+// The Night Shelver — knacks (abilities), upgrades, moods and achievements
 (function () {
   'use strict';
   const TH = window.TH;
   const S = () => TH.Save.data;
 
-  // ---------- abilities ----------
+  // ---------- knacks: active abilities, unlocked by finishing shelf rows ----------
   TH.ABIL = [
-    { id: 'magnet', name: 'Magnet Mitt', bind: 'ability1', icon: 'magnet', need: 10, unlock: 3, vals: [3, 5, 8],
-      desc: (v) => `Your next correct drop also pulls up to ${v} matching items out of the pile.` },
-    { id: 'gust', name: 'Broom Breeze', bind: 'ability2', icon: 'wind', need: 16, unlock: 12, vals: [4, 6, 9],
-      desc: (v) => `Sweeps ${v} random items straight into their homes.` },
-    { id: 'golden', name: 'Golden Hour', bind: 'ability3', icon: 'sun', need: 22, unlock: 27, vals: [12, 20, 30],
-      desc: (v) => `Double coins for your next ${v} placements.` },
-    { id: 'lantern', name: 'Guiding Lantern', bind: 'ability4', icon: 'lantern', need: 12, unlock: 45, vals: [6, 10, 15],
-      desc: (v) => `Your next ${v} drops always find the right home — mistakes are impossible.` }
+    { id: 'gather', name: 'Call the Strays', short: 'Call', bind: 'ability1', icon: 'magnet', need: 12, unlock: 2, vals: [3, 5, 8],
+      desc: (v) => `Look at a bookcase: up to ${v} of its books fly out of the piles and into your hands.` },
+    { id: 'tidy', name: 'Tidy Hands', short: 'Tidy', bind: 'ability2', icon: 'wind', need: 16, unlock: 8, vals: [3, 6, 12],
+      desc: (v) => `Up to ${v} books in your hands shelve themselves, wherever they belong.` },
+    { id: 'golden', name: 'Golden Hour', short: 'Golden', bind: 'ability3', icon: 'sun', need: 22, unlock: 18, vals: [12, 20, 30],
+      desc: (v) => `Double coins for your next ${v} books.` },
+    { id: 'way', name: 'Wayfinder', short: 'Way', bind: 'ability4', icon: 'lantern', need: 14, unlock: 32, vals: [40, 80, 150],
+      desc: (v) => `For ${v} seconds, a light marks the exact shelf for every book you carry.` }
   ];
-  TH.UPGRADE_COST = [400, 1200];
-  TH.totalStars = () => Object.values(S().stars).reduce((a, b) => a + b, 0);
-  TH.maxStars = () => TH.LEVELS.length * 3;
-  TH.abilUnlocked = (a) => TH.totalStars() >= a.unlock;
+  TH.UPGRADE_COST = [500, 1500];
+  TH.abilUnlocked = (a) => S().stats.rows >= a.unlock;
   TH.abilVal = (a) => a.vals[(S().abil[a.id] || 1) - 1];
 
-  // ---------- shop ----------
-  TH.THEMES = [
-    { id: 'honey', name: 'Honey Oak', cost: 0, wall: '#f2deb6', wall2: '#e9cf9c', trim: '#b98858', table: '#cd9c66', table2: '#b98552', crate: '#dcae78', crateD: '#b08350', ink: '#5b422e' },
-    { id: 'sage', name: 'Sage Morning', cost: 500, wall: '#dfe8cf', wall2: '#cbd9b6', trim: '#8a9c6c', table: '#c7a977', table2: '#b39563', crate: '#d9bd8c', crateD: '#a98c5c', ink: '#46523a' },
-    { id: 'rose', name: 'Rose Tea', cost: 800, wall: '#f6dcd8', wall2: '#eec5c1', trim: '#c0827e', table: '#d3a17c', table2: '#bf8b68', crate: '#e3b792', crateD: '#b98a66', ink: '#6a4040' },
-    { id: 'lav', name: 'Lavender Dusk', cost: 1100, wall: '#ddd5ee', wall2: '#c9bee3', trim: '#8573ad', table: '#b99b86', table2: '#a48672', crate: '#d3b9a3', crateD: '#a38872', ink: '#473d63' },
-    { id: 'cocoa', name: 'Midnight Cocoa', cost: 1500, wall: '#4f4057', wall2: '#433649', trim: '#2f2433', table: '#7a5a44', table2: '#694b37', crate: '#a47d5c', crateD: '#77573d', ink: '#f2e3cf' }
+  // ---------- passive upgrades ----------
+  TH.UPG = [
+    { id: 'satchel', name: 'Book Strap', icon: 'bag', vals: [5, 7, 9, 12], cost: [250, 700, 1500], unit: 'books', desc: 'How many books you can carry at once.' },
+    { id: 'boots', name: 'Soft Slippers', icon: 'paw', vals: [100, 115, 130], cost: [300, 900], unit: '% speed', desc: 'Walk and run faster.' },
+    { id: 'reach', name: 'Long Arms', icon: 'check', vals: [2.6, 3.4, 4.2], cost: [300, 900], unit: 'm reach', desc: 'Pick up and shelve from further away.' }
   ];
-  TH.theme = () => TH.THEMES.find((t) => t.id === S().theme) || TH.THEMES[0];
-  TH.PETS = [
-    { id: 'cat', name: 'Biscuit the Cat', cost: 600, blurb: 'Naps on the shelf. Perks up when you’re on a streak.' },
-    { id: 'frog', name: 'Pip the Frog', cost: 1000, blurb: 'Small, round, and very proud of you.' },
-    { id: 'bun', name: 'Clover the Bunny', cost: 1500, blurb: 'A reformed dust bunny. Mostly.' }
-  ];
+  TH.upgVal = (id) => { const u = TH.UPG.find((x) => x.id === id); return u.vals[S().upg[id] || 0]; };
 
-  // ---------- level access ----------
-  TH.levelUnlocked = (lv) => lv.index === 0 || !!S().stars[TH.LEVELS[lv.index - 1].id];
-  TH.nextLevel = () => TH.LEVELS.find((l) => !S().stars[l.id]) || null;
-  TH.endlessUnlocked = () => TH.LEVELS.filter((l) => S().stars[l.id]).length >= 8;
-  TH.roomStars = (room) => TH.LEVELS.filter((l) => l.room === room.id).reduce((a, l) => a + (S().stars[l.id] || 0), 0);
-  TH.discovered = () => Object.keys(S().catalog).length;
+  // ---------- moods: lighting themes ----------
+  TH.MOODS = [
+    { id: 'lamp', name: 'Lamplight', cost: 0, win: '#2b3a66', sky: 0x9a8670, ground: 0x3a2a20, hemi: 0.62, sun: 0xffddb0, sunI: 0.22, lamp: 0xffbe78, lampI: 0.8, fog: '#1d140d' },
+    { id: 'morning', name: 'Morning Sun', cost: 600, win: '#fff1c4', sky: 0xfff3da, ground: 0x8d7c66, hemi: 0.8, sun: 0xfff0cc, sunI: 0.42, lamp: 0xffc98a, lampI: 0.2, fog: '#cdbd9c' },
+    { id: 'rain', name: 'Rainy Dusk', cost: 1000, win: '#93a8bb', sky: 0xb5c3cf, ground: 0x55504a, hemi: 0.74, sun: 0xcdd6de, sunI: 0.28, lamp: 0xffb873, lampI: 0.6, fog: '#7c8387' },
+    { id: 'moon', name: 'Moonlight', cost: 1500, win: '#b7caff', sky: 0x7088cc, ground: 0x1c2238, hemi: 0.66, sun: 0x9fb4ff, sunI: 0.36, lamp: 0xffc48a, lampI: 0.4, fog: '#131a2e' }
+  ];
+  TH.mood = () => TH.MOODS.find((m) => m.id === S().mood) || TH.MOODS[0];
+
+  // ---------- progress helpers ----------
+  TH.shelvedCount = (wing) => {
+    const sh = S().shelved; let n = 0;
+    for (const b of TH.BOOKS) if (sh[b.id] && (wing == null || b.wing === wing)) n++;
+    return n;
+  };
+  TH.seriesCount = (se) => { const sh = S().shelved; let n = 0; for (const id of se.books) if (sh[id]) n++; return n; };
+  TH.GATE_AT = 0.6;                         // share of a wing that must be shelved to open the next door
+  TH.wingOpen = (w) => w === 0 || !!S().gates[w - 1];
 
   // ---------- achievements ----------
   const ACH = TH.ACH = [];
   const A = (id, name, desc, reward, prog) => ACH.push({ id, name, desc, reward, prog });
-  const N = TH.ITEM_LIST.length;
-  const perfects = (s) => Object.values(s.best).filter((b) => b.perfect).length;
-  const starSum = (s) => Object.values(s.stars).reduce((a, b) => a + b, 0);
+  const N = TH.BOOKS.length;
+  A('first', 'First Edition', 'Shelve your first book.', 10, (s) => [s.stats.placed, 1]);
+  A('p100', 'Getting the Hang of It', 'Shelve 100 books.', 25, (s) => [s.stats.placed, 100]);
+  A('p300', 'Spine Tingling', 'Shelve 300 books.', 50, (s) => [s.stats.placed, 300]);
+  A('p600', 'Well Read', 'Shelve 600 books.', 100, (s) => [s.stats.placed, 600]);
+  A('p1000', 'Every Last Volume', 'Shelve 1,000 books.', 250, (s) => [s.stats.placed, 1000]);
+  A('c10', 'On a Roll', 'Reach a streak of 10.', 20, (s) => [s.stats.bestStreak, 10]);
+  A('c25', 'In the Zone', 'Reach a streak of 25.', 40, (s) => [s.stats.bestStreak, 25]);
+  A('c50', 'Flow State', 'Reach a streak of 50.', 80, (s) => [s.stats.bestStreak, 50]);
+  A('c100', 'Unbreakable', 'Reach a streak of 100.', 150, (s) => [s.stats.bestStreak, 100]);
+  A('r1', 'A Complete Set', 'Finish a shelf row.', 20, (s) => [s.stats.rows, 1]);
+  A('r10', 'Row by Row', 'Finish 10 shelf rows.', 50, (s) => [s.stats.rows, 10]);
+  A('r40', 'Shelf Respect', 'Finish 40 shelf rows.', 100, (s) => [s.stats.rows, 40]);
+  A('r96', 'Not a Gap in Sight', 'Finish all 96 shelf rows.', 250, (s) => [s.stats.rows, TH.SERIES.length]);
+  A('k1', 'Case Closed', 'Fill a whole bookcase.', 40, (s) => [s.stats.cases, 1]);
+  A('k6', 'Section Head', 'Fill 6 bookcases.', 80, (s) => [s.stats.cases, 6]);
+  A('k12', 'Half the Library', 'Fill 12 bookcases.', 120, (s) => [s.stats.cases, 12]);
+  A('k24', 'Head Librarian', 'Fill every bookcase.', 300, (s) => [s.stats.cases, TH.CATS.length]);
+  TH.WINGS.forEach((w, i) => A('wing' + i, w.name.replace(/^The /, '') + ' Restored', `Shelve every book in ${w.name}.`, 100,
+    (s) => { let n = 0; for (const b of TH.BOOKS) if (b.wing === i && s.shelved[b.id]) n++; return [n, w.books]; }));
+  A('g1', 'Gilt Edges', 'Shelve a gilded book.', 20, (s) => [s.stats.golds, 1]);
+  A('g10', 'Gold Leaf', 'Shelve 10 gilded books.', 60, (s) => [s.stats.golds, 10]);
+  A('g25', 'The Gilded Shelf', 'Shelve 25 gilded books.', 150, (s) => [s.stats.golds, 25]);
+  A('m1', 'Lost & Found', 'Find a lost bookmark.', 15, (s) => [s.stats.marks, 1]);
+  A('m10', 'Page Keeper', 'Find 10 lost bookmarks.', 60, (s) => [s.stats.marks, 10]);
+  A('m20', 'Never Lose Your Place', 'Find all 20 bookmarks in one tidy-up.', 150, (s) => [Object.keys(s.marks).length, 20]);
+  A('ab1', 'A Little Help', 'Use a knack.', 15, (s) => [s.stats.abilUses, 1]);
+  A('ab40', 'Helping Hands', 'Use knacks 40 times.', 80, (s) => [s.stats.abilUses, 40]);
+  A('call5', 'Here, Kitty', 'Call 5 or more books at once.', 60, (s) => [s.stats.gatherBest, 5]);
+  A('abmax', 'Fully Equipped', 'Raise every knack to level 3.', 200, (s) => [Object.values(s.abil).filter((l) => l >= 3).length, 4]);
+  A('strap', 'Armful', 'Carry 12 books at once.', 60, (s) => [s.stats.mostHeld, 12]);
+  A('piles', 'Clear the Floor', 'Empty 40 piles.', 60, (s) => [s.stats.piles, 40]);
+  A('walk1', 'Stretching Your Legs', 'Walk 1 kilometre (in metres).', 30, (s) => [Math.floor(s.stats.metres), 1000]);
+  A('walk5', 'Well-Worn Carpet', 'Walk 5 kilometres (in metres).', 100, (s) => [Math.floor(s.stats.metres), 5000]);
+  A('hour', 'Night Shift', 'Spend an hour in the library (in minutes).', 100, (s) => [Math.floor(s.stats.playTime / 60), 60]);
+  A('e1k', 'Late Fees', 'Earn 1,000 coins.', 50, (s) => [s.stats.earned, 1000]);
+  A('e5k', 'Endowment', 'Earn 5,000 coins.', 150, (s) => [s.stats.earned, 5000]);
+  A('sp3k', 'Big Spender', 'Spend 3,000 coins.', 100, (s) => [s.stats.spent, 3000]);
+  A('mood3', 'Mood Lighting', 'Own 3 moods.', 60, (s) => [s.moods.length, 3]);
+  A('oops', 'Nobody’s Perfect', 'Try the wrong shelf 25 times. It happens!', 10, (s) => [s.stats.mistakes, 25]);
+  A('again', 'Once More, With Feeling', 'Reshuffle the library and start over.', 100, (s) => [s.stats.rounds, 1]);
 
-  A('first', 'First Things First', 'Put one item where it belongs.', 10, (s) => [s.stats.placed, 1]);
-  A('p100', 'Getting the Hang of It', 'Sort 100 items.', 25, (s) => [s.stats.placed, 100]);
-  A('p500', 'Neat Freak', 'Sort 500 items.', 50, (s) => [s.stats.placed, 500]);
-  A('p1500', 'Master Organizer', 'Sort 1,500 items.', 100, (s) => [s.stats.placed, 1500]);
-  A('p5000', 'Tidy Titan', 'Sort 5,000 items.', 250, (s) => [s.stats.placed, 5000]);
-  A('c10', 'On a Roll', 'Reach a streak of 10.', 20, (s) => [s.stats.bestCombo, 10]);
-  A('c25', 'In the Zone', 'Reach a streak of 25.', 40, (s) => [s.stats.bestCombo, 25]);
-  A('c50', 'Flow State', 'Reach a streak of 50.', 80, (s) => [s.stats.bestCombo, 50]);
-  A('c80', 'Unbreakable', 'Reach a streak of 80.', 150, (s) => [s.stats.bestCombo, 80]);
-  A('perf1', 'Spotless', 'Finish a level with zero mistakes.', 25, (s) => [perfects(s), 1]);
-  A('perf10', 'Perfectionist', 'Zero-mistake finish on 10 different levels.', 100, (s) => [perfects(s), 10]);
-  A('perfAll', 'Immaculate', 'Zero-mistake finish on every level.', 300, (s) => [perfects(s), TH.LEVELS.length]);
-  A('s30', 'Star Gazer', 'Collect 30 stars.', 40, (s) => [starSum(s), 30]);
-  A('s75', 'Star Collector', 'Collect 75 stars.', 80, (s) => [starSum(s), 75]);
-  A('sAll', 'Every Last Star', 'Collect every star in the game.', 250, (s) => [starSum(s), TH.LEVELS.length * 3]);
-  TH.ALL_ROOMS.forEach((room) => {
-    const lv = TH.LEVELS.filter((l) => l.room === room.id);
-    A('room_' + room.id, room.badge, `Finish every level in ${room.name}.`, 30, (s) => [lv.filter((l) => s.stars[l.id]).length, lv.length]);
-  });
-  A('cat25', 'Curious Collector', 'Discover a quarter of the catalog.', 50, (s) => [Object.keys(s.catalog).length, N / 4]);
-  A('cat50', 'Seasoned Curator', 'Discover half of the catalog.', 100, (s) => [Object.keys(s.catalog).length, N / 2]);
-  A('cat100', 'Completionist', 'Discover every item in the catalog.', 300, (s) => [Object.keys(s.catalog).length, N]);
-  A('g1', 'Ooh, Shiny!', 'Sort a golden item.', 20, (s) => [s.stats.golds, 1]);
-  A('g25', 'Midas Touch', 'Sort 25 golden items.', 100, (s) => [s.stats.golds, 25]);
-  A('gcat', 'Gilded Catalog', 'Find the golden version of 100 different items.', 250, (s) => [Object.keys(s.gold).length, 100]);
-  A('b1', 'Shoo!', 'Catch a dust bunny.', 15, (s) => [s.stats.bunnies, 1]);
-  A('b25', 'Dust Buster', 'Catch 25 dust bunnies.', 60, (s) => [s.stats.bunnies, 25]);
-  A('b100', 'Bunny Whisperer', 'Catch 100 dust bunnies.', 150, (s) => [s.stats.bunnies, 100]);
-  A('ab1', 'A Little Help', 'Use an ability.', 15, (s) => [s.stats.abilUses, 1]);
-  A('ab50', 'Helping Hands', 'Use abilities 50 times.', 80, (s) => [s.stats.abilUses, 50]);
-  A('mag5', 'Magnetic Personality', 'Pull 5 or more items with one Magnet Mitt.', 60, (s) => [s.stats.magnetBest, 5]);
-  A('abmax', 'Fully Equipped', 'Upgrade every ability to level 3.', 200, (s) => [Object.values(s.abil).filter((l) => l >= 3).length, 4]);
-  A('fast', 'Quick Hands', 'Finish a level of 24+ items in under a minute.', 60, (s) => [s.stats.fast ? 1 : 0, 1]);
-  A('hour', 'Time Well Spent', 'Spend an hour tidying (in minutes).', 100, (s) => [Math.floor(s.stats.playTime / 60), 60]);
-  A('e1k', 'Piggy Bank', 'Earn 1,000 coins.', 50, (s) => [s.stats.earned, 1000]);
-  A('e5k', 'Treasure Chest', 'Earn 5,000 coins.', 150, (s) => [s.stats.earned, 5000]);
-  A('sp2k', 'Big Spender', 'Spend 2,000 coins.', 100, (s) => [s.stats.spent, 2000]);
-  A('th3', 'Interior Designer', 'Own 3 room themes.', 60, (s) => [s.themes.length, 3]);
-  A('pet', 'Good Company', 'Adopt a companion.', 40, (s) => [s.pets.length, 1]);
-  A('end5', 'Just One More', 'Finish 5 Endless rounds.', 50, (s) => [s.stats.endless, 5]);
-  A('end25', 'Never-Ending Tidy', 'Finish 25 Endless rounds.', 150, (s) => [s.stats.endless, 25]);
-  A('bins100', 'Lid On Tight', 'Fill 100 containers.', 60, (s) => [s.stats.bins, 100]);
-  A('shuf', 'Shake It Up', 'Shuffle the pile 10 times.', 15, (s) => [s.stats.shuffles, 10]);
-  A('oops', 'Nobody’s Perfect', 'Make 50 mistakes. It happens!', 10, (s) => [s.stats.mistakes, 50]);
-  A('finale', 'Home Sweet Home', 'Finish The Grand Tidy.', 200, (s) => [s.stars['attic-4'] ? 1 : 0, 1]);
-
-  // check everything; newly earned ones pay out and pop a toast
   TH.checkAch = () => {
     const s = S();
     let again = false;
@@ -112,36 +106,5 @@
       }
     }
     if (again) { TH.Save.commit(); if (TH.UI) TH.UI.refreshCoins(); }
-  };
-
-  // ---------- finishing a level ----------
-  TH.starsFor = (mistakes, total) => (mistakes <= Math.ceil(total * 0.06) ? 3 : mistakes <= Math.ceil(total * 0.16) ? 2 : 1);
-  TH.finishLevel = (level, run) => {
-    const s = S();
-    const stars = TH.starsFor(run.mistakes, run.total);
-    const perfect = run.mistakes === 0;
-    const bonus = stars * 15 + (perfect ? 30 : 0);
-    TH.Save.earn(bonus);
-    const before = TH.totalStars();
-    s.stats.levels++;
-    if (run.total >= 24 && run.time < 60) s.stats.fast = 1;
-    let firstClear = false;
-    if (level.endless) {
-      s.stats.endless++;
-    } else {
-      firstClear = !s.stars[level.id];
-      s.stars[level.id] = Math.max(s.stars[level.id] || 0, stars);
-      const b = s.best[level.id] || { mistakes: 1e9, time: 1e9, combo: 0, perfect: false };
-      b.mistakes = Math.min(b.mistakes, run.mistakes);
-      b.time = Math.min(b.time, Math.round(run.time));
-      b.combo = Math.max(b.combo, run.bestCombo);
-      b.perfect = b.perfect || perfect;
-      s.best[level.id] = b;
-    }
-    const after = TH.totalStars();
-    const unlocked = TH.ABIL.filter((a) => before < a.unlock && after >= a.unlock);
-    TH.Save.flush();
-    TH.checkAch();
-    return { stars, perfect, bonus, coins: run.coins + bonus, unlocked, firstClear };
   };
 })();

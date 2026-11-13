@@ -1,8 +1,8 @@
-// Tidy Hollow — core: namespace, helpers, settings and save data
+// The Night Shelver — core: namespace, helpers, settings and save data
 (function () {
   'use strict';
   const TH = window.TH = {};
-  TH.VERSION = '1.0.0';
+  TH.VERSION = '2.0.0';
   TH.desktop = window.desktop || null;
 
   // ---------- helpers ----------
@@ -28,6 +28,10 @@
     const a = hex2(h1), b = hex2(h2);
     return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * t).toString(16).padStart(2, '0')).join('');
   };
+  TH.hsl = (h, sat, l) => {
+    const f = (n) => { const k = (n + h / 30) % 12, a = sat * Math.min(l, 1 - l); return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))).toString(16).padStart(2, '0'); };
+    return '#' + f(0) + f(8) + f(4);
+  };
   TH.fmt = (n) => Math.floor(n).toLocaleString('en-US');
   TH.time = (s) => { s = Math.floor(s); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
   TH.esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -49,21 +53,23 @@
   const clone = (o) => JSON.parse(JSON.stringify(o));
 
   // ---------- settings ----------
-  const SKEY = 'tidyhollow.settings.v1';
+  const SKEY = 'nightshelver.settings.v1';
   TH.DEFAULTS = {
     audio: { master: 80, music: 55, sfx: 80, ambience: 40, ambType: 'fire', muteUnfocused: true },
     video: {
-      mode: 'windowed', res: '1600x900', renderScale: 100, quality: 'high', fpsCap: 0,
-      showFps: false, uiScale: 100, reduceMotion: false, shake: true, particles: true
+      mode: 'windowed', res: '1600x900', renderScale: 100, quality: 'high', fpsCap: 0, fov: 75,
+      showFps: false, uiScale: 100, reduceMotion: false, bob: true, particles: true
     },
     controls: {
-      carry: 'drag', assist: 'normal',
+      sens: 100, invertY: false, hold: true,
       keys: {
+        forward: 'KeyW', back: 'KeyS', left: 'KeyA', right: 'KeyD', run: 'ShiftLeft',
+        interact: 'KeyE', grab: 'KeyF',
         ability1: 'Digit1', ability2: 'Digit2', ability3: 'Digit3', ability4: 'Digit4',
-        shuffle: 'KeyR', pause: 'Escape', fullscreen: 'F11', mute: 'KeyM'
+        pause: 'KeyP', fullscreen: 'F11', mute: 'KeyM'
       }
     },
-    game: { names: true, colorblind: false, tips: true }
+    game: { names: true, exact: false, tips: true, crosshair: true }
   };
   TH.Settings = merge(clone(TH.DEFAULTS), store.get(SKEY));
   TH.saveSettings = () => store.set(SKEY, TH.Settings);
@@ -73,21 +79,23 @@
   };
 
   // ---------- save data ----------
-  const DKEY = 'tidyhollow.save.v1';
+  const DKEY = 'nightshelver.save.v1';
   const blank = () => ({
-    v: 1, coins: 0,
-    stars: {},      // levelId -> 1..3
-    best: {},       // levelId -> { mistakes, time, combo, perfect }
-    catalog: {},    // itemId -> times sorted
-    gold: {},       // itemId -> 1 when golden version found
+    v: 1, coins: 0, started: false,
+    shelved: [],    // one 0/1 per book
+    goldFound: {},  // bookId -> 1 once a gilded book has been shelved
+    marks: {},      // bookmarkId -> 1 when collected
+    gates: {},      // wing index -> 1 when its door is open
     ach: {},        // achievementId -> timestamp
-    abil: { magnet: 1, gust: 1, golden: 1, lantern: 1 },
-    themes: ['honey'], theme: 'honey',
-    pets: [], pet: '',
+    abil: { gather: 1, tidy: 1, golden: 1, way: 1 },
+    charge: {},
+    upg: { satchel: 0, boots: 0, reach: 0 },
+    moods: ['lamp'], mood: 'lamp',
     tips: {},
+    pos: null,      // where you were standing
     stats: {
-      placed: 0, mistakes: 0, bestCombo: 0, bunnies: 0, golds: 0, abilUses: 0, magnetBest: 0,
-      bins: 0, levels: 0, endless: 0, playTime: 0, earned: 0, spent: 0, shuffles: 0, fast: 0
+      placed: 0, mistakes: 0, bestStreak: 0, rows: 0, cases: 0, wings: 0, golds: 0, marks: 0, abilUses: 0,
+      gatherBest: 0, piles: 0, metres: 0, playTime: 0, earned: 0, spent: 0, mostHeld: 0, rounds: 0
     }
   });
   let saveTimer = 0;

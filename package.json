@@ -1,8 +1,8 @@
 {
-  "name": "tidy-hollow",
-  "version": "1.0.0",
-  "description": "Tidy Hollow — a cozy organizing game. Sort 480 items across a cluttered cottage.",
-  "author": "Tidy Hollow",
+  "name": "night-shelver",
+  "version": "2.0.0",
+  "description": "The Night Shelver \u2014 a cozy first-person library organizing game. Shelve 1,152 books.",
+  "author": "The Night Shelver",
   "license": "MIT",
   "private": true,
   "main": "main.js",
@@ -18,8 +18,8 @@
     "electron-builder": "^26.18.0"
   },
   "build": {
-    "appId": "com.tidyhollow.game",
-    "productName": "Tidy Hollow",
+    "appId": "com.nightshelver.game",
+    "productName": "The Night Shelver",
     "files": [
       "main.js",
       "preload.js",
@@ -40,7 +40,7 @@
       "allowToChangeInstallationDirectory": true
     },
     "portable": {
-      "artifactName": "TidyHollow-Portable-${version}.exe"
+      "artifactName": "NightShelver-Portable-${version}.exe"
     },
     "linux": {
       "target": [

@@ -15,11 +15,11 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            name: TidyHollow-Windows
+            name: NightShelver-Windows
             files: |
               dist/*.exe
           - os: ubuntu-latest
-            name: TidyHollow-Linux
+            name: NightShelver-Linux
             files: |
               dist/*.AppImage
     runs-on: ${{ matrix.os }}
