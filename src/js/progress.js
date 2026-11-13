@@ -72,6 +72,12 @@
   A('g1', 'Gilt Edges', 'Shelve a gilded book.', 20, (s) => [s.stats.golds, 1]);
   A('g10', 'Gold Leaf', 'Shelve 10 gilded books.', 60, (s) => [s.stats.golds, 10]);
   A('g25', 'The Gilded Shelf', 'Shelve 25 gilded books.', 150, (s) => [s.stats.golds, 25]);
+  const readN = (s) => Object.keys(s.read).length;
+  A('read1', 'Opening Lines', 'Open a book and read it.', 10, (s) => [readN(s), 1]);
+  A('read25', 'Page Turner', 'Read 25 different books.', 40, (s) => [readN(s), 25]);
+  A('read100', 'Bookworm', 'Read 100 different books.', 100, (s) => [readN(s), 100]);
+  A('read400', 'Well-Thumbed', 'Read 400 different books.', 200, (s) => [readN(s), 400]);
+  A('series', 'Cover to Cover', 'Read all twelve volumes of one series.', 80, (s) => [Math.max(...TH.SERIES.map((se) => se.books.filter((id) => s.read[id]).length)), 12]);
   A('m1', 'Lost & Found', 'Find a lost bookmark.', 15, (s) => [s.stats.marks, 1]);
   A('m10', 'Page Keeper', 'Find 10 lost bookmarks.', 60, (s) => [s.stats.marks, 10]);
   A('m20', 'Never Lose Your Place', 'Find all 20 bookmarks in one tidy-up.', 150, (s) => [Object.keys(s.marks).length, 20]);

@@ -573,7 +573,7 @@
         const t = rayBox(lox, o.y, loz, ldx, d.y, ldz, -IW / 2, IW / 2, row.y, row.y + ROW_H, -CD / 2, CD / 2);
         if (t < 0 || t >= bt) continue;
         const slot = clamp(Math.floor((lox + ldx * t) / row.se.t + NV / 2), 0, NV - 1);
-        bt = t; best = { type: 'row', row, cs, slot };
+        bt = t; best = { type: 'row', row, cs, slot, book: row.slots[slot] >= 0 && books[row.slots[slot]].st === 'shelf' ? books[row.slots[slot]] : null };
       }
     }
     for (const mk of marks) {
@@ -604,7 +604,7 @@
     if (a && a.type === 'pile') {
       const b = a.book, full = G.held.length + pending >= cap();
       hlBook.visible = true; hlBook.position.copy(b.pos); hlBook.quaternion.copy(b.quat); hlBook.scale.set(b.se.t + 0.012, b.se.h + 0.02, b.se.d + 0.02);
-      title = TH.bookTitle(b.def); hint = (b.def.gold ? 'Gilded · ' : '') + TH.CATS[b.def.cat].name + (full ? ' · your hands are full' : ' · click to pick up');
+      title = TH.bookTitle(b.def); hint = (b.def.gold ? 'Gilded · ' : '') + TH.CATS[b.def.cat].name + (full ? ' · your hands are full' : ' · click to pick up') + ` · ${TH.UI.keyLabel('read')} to read`;
       tone = full ? 'warn' : ''; key = 'p' + b.id + full;
     } else if (a && a.type === 'row') {
       const row = a.row, cs = a.cs, se = row.se;
@@ -619,7 +619,12 @@
         const b = books[a.fits[0]], dir = b.def.vol < a.slot ? 'left' : 'right';
         hint += ` · Vol. ${TH.ROMAN[b.def.vol]} goes further ${dir} (gap ${b.def.vol + 1})`; tone = 'warn';
       } else if (G.held.length) hint += ' · nothing you carry goes here';
-      key = 'r' + se.id + '|' + a.cand + '|' + a.slot * (TH.Settings.game.exact ? 1 : 0) + '|' + row.filled + '|' + G.held.length;
+      if (a.book && a.cand < 0) {
+        const b = a.book;
+        hlBook.visible = true; hlBook.position.copy(b.pos); hlBook.quaternion.copy(b.quat); hlBook.scale.set(b.se.t + 0.006, b.se.h + 0.012, b.se.d + 0.012);
+        title = TH.bookTitle(b.def); hint = `${cs.cat.name} · on its shelf · ${TH.UI.keyLabel('read')} to read` + (a.fits.length ? '' : G.held.length ? ' · nothing you carry goes here' : ''); tone = '';
+      }
+      key = 'r' + se.id + '|' + a.cand + '|' + a.slot * (TH.Settings.game.exact ? 1 : 0) + '|' + row.filled + '|' + G.held.length + '|' + (a.book ? a.book.id : -1);
     } else if (a && a.type === 'mark') { title = 'A lost bookmark'; hint = 'Click to pick it up'; tone = 'good'; key = 'm' + a.mark.id; }
     else if (a && a.type === 'gate') {
       const w = a.gate.idx, pct = Math.floor(TH.shelvedCount(w) / TH.WINGS[w].books * 100);
@@ -646,7 +651,7 @@
       if (G.held.length + pending >= cap()) { TH.Audio.play('deny'); TH.UI.flash('Your hands are full — shelve some first'); return false; }
       takeFromPile(a.pile, a.idx);
       TH.Audio.play('pick'); refreshHand(); TH.checkAch(); TH.UI.hud(); aimKey = '';
-      if (G.held.length === 1) TH.UI.tip('shelve', 'Now find the bookcase with that section’s name on top, point at the shelf for its series, and click.');
+      if (G.held.length === 1) TH.UI.tip('shelve', `Now find the bookcase with that section’s name on top, point at the shelf for its series, and click. Curious what’s inside? Press ${TH.UI.keyLabel('read')} to read any book.`);
       return true;
     }
     if (a.type === 'row') {
@@ -666,6 +671,14 @@
     }
     if (a.type === 'gate') { TH.Audio.play('deny'); return false; }
     return false;
+  };
+  // open a book: the one under the crosshair (in a pile or on a shelf), otherwise the last one you picked up
+  G.read = () => {
+    if (G.mode !== 'play' || G.paused) return;
+    const a = G.aim;
+    const id = a && a.type === 'pile' ? a.book.id : a && a.type === 'row' && a.book ? a.book.id : G.held.length ? G.held[G.held.length - 1] : -1;
+    if (id < 0) { TH.UI.flash('Point at a book, or pick one up, to read it'); return; }
+    TH.UI.openBook(id);
   };
   // take every book in the pile that belongs to the same section as the one you point at
   G.grabAll = () => {

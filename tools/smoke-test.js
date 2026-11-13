@@ -25,6 +25,8 @@ const { chromium } = require('playwright');
   assert(info.books === 1152 && info.titles === 1152, '1,152 books with unique titles');
   assert(info.series === 96 && info.names === 96 && info.cats === 24, '96 series in 24 sections');
   assert(info.pre > 60 && info.pre < 230, 'a new library starts partly shelved (' + info.pre + ')');
+  const st = await ev(() => { let n = 0, short = 0, words = 0; (TH.STORIES || []).forEach((se) => (se || []).forEach((v) => { n++; const w = v[1].trim().split(/\s+/).length; words += w; if (w < 50 || !v[0]) short++; })); return { n, short, words }; });
+  assert(st.n === 1152 && st.short === 0, 'every one of the 1,152 books has a page to read (' + st.n + ' pages, ' + st.words + ' words)');
   await shot('01-title');
 
   await page.click('[data-act="enter"]'); await wait(700);
@@ -57,6 +59,16 @@ const { chromium } = require('playwright');
   assert(await ev(() => TH.Game.aim && TH.Game.aim.type === 'row' && TH.Game.aim.cand >= 0), 'the right shelf offers to take the book');
   await ev(() => TH.Game.interact()); await landed();
   assert(await ev((id) => { const D = TH.Game.debug, b = D.books[id], s = D.slot(id); return b.st === 'shelf' && b.pos.distanceTo(s) < 0.001 && TH.Save.data.shelved[id] === 1 && TH.Game.held.length === 0; }, held[0]), 'the book lands in its exact slot');
+
+  // --- reading: point at the shelved book and open it ---
+  await ev((id) => { const D = TH.Game.debug, s = D.slot(id), cs = D.cases[D.books[id].def.cat]; D.stand(s.x, cs.z + cs.s * 1.4); D.lookAt(s.x, s.y, s.z); }, held[0]);
+  await frames();
+  assert(await ev((id) => TH.Game.aim && TH.Game.aim.type === 'row' && TH.Game.aim.book && TH.Game.aim.book.id === id, held[0]), 'crosshair picks out a single book on a shelf');
+  await page.keyboard.press('KeyR'); await wait(400); await shot('03b-reading');
+  const rd = await ev((id) => { const b = TH.BOOKS[id], se = TH.SERIES[b.series], el = document.querySelector('#modal .reader'); return el ? { h2: el.querySelector('h2').textContent === se.name, h3: el.querySelector('h3').textContent === TH.STORIES[se.id][b.vol][0], text: el.querySelector('.text').textContent.length, paused: TH.Game.paused, read: TH.Save.data.read[id] } : null; }, held[0]);
+  assert(rd && rd.h2 && rd.h3 && rd.text > 300 && rd.paused && rd.read === 1, 'R opens the book with the right title and its page of text');
+  await page.keyboard.press('KeyR'); await wait(300);
+  assert(await ev(() => !document.querySelector('#modal .reader') && !TH.Game.paused), 'R closes the book and returns to the game');
 
   // right-click grabs every book of one section from a pile
   await ev(() => { const D = TH.Game.debug, pl = D.piles.filter((x) => x.wing === 0 && x.y0 < 0.1 && x.books.length > 4).pop(), top = D.books[pl.books[pl.books.length - 1]]; D.stand(pl.x - 0.9, pl.z + 0.45); D.lookAt(top.pos.x, top.pos.y, top.pos.z); });
@@ -106,6 +118,11 @@ const { chromium } = require('playwright');
   await page.selectOption('select[data-path="video.quality"]', 'high'); await wait(300);
   assert(await ev(() => TH.Settings.video.quality === 'high'), 'graphics quality switches (renderer rebuilt)');
   await page.click('[data-act="back"]'); await page.click('[data-act="go"][data-to="catalog"]'); await wait(150); await shot('11-catalogue');
+  await page.click('.vols button'); await wait(300);
+  assert(await ev(() => !!document.querySelector('#modal .reader')), 'a shelved book can be read from the Card Catalogue');
+  await page.click('.reader-bar .rnav:not(.off)[data-act="readbook"]'); await wait(200);
+  await page.click('[data-act="closebook"]'); await wait(200);
+  assert(await ev(() => !!document.querySelector('#modal .sects')), 'closing the book returns to the catalogue');
   await page.click('[data-act="back"]'); await page.click('[data-act="go"][data-to="ach"]'); await wait(150); await shot('12-achievements');
   await page.click('[data-act="back"]'); await page.click('[data-act="resume"]'); await wait(300);
   assert(await ev(() => !TH.Game.paused && TH.Game.mode === 'play'), 'resume returns to the game');

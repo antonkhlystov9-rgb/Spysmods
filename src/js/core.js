@@ -64,7 +64,7 @@
       sens: 100, invertY: false, hold: true,
       keys: {
         forward: 'KeyW', back: 'KeyS', left: 'KeyA', right: 'KeyD', run: 'ShiftLeft',
-        interact: 'KeyE', grab: 'KeyF',
+        interact: 'KeyE', grab: 'KeyF', read: 'KeyR',
         ability1: 'Digit1', ability2: 'Digit2', ability3: 'Digit3', ability4: 'Digit4',
         pause: 'KeyP', fullscreen: 'F11', mute: 'KeyM'
       }
@@ -84,6 +84,7 @@
     v: 1, coins: 0, started: false,
     shelved: [],    // one 0/1 per book
     goldFound: {},  // bookId -> 1 once a gilded book has been shelved
+    read: {},       // bookId -> 1 once you have opened it
     marks: {},      // bookmarkId -> 1 when collected
     gates: {},      // wing index -> 1 when its door is open
     ach: {},        // achievementId -> timestamp

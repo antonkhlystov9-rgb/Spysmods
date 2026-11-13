@@ -47,6 +47,7 @@
     return { Escape: 'Esc', Space: 'Space', ShiftLeft: 'Shift', ShiftRight: 'R Shift', ControlLeft: 'Ctrl', ControlRight: 'R Ctrl', AltLeft: 'Alt', AltRight: 'R Alt', ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right', Backquote: '`', Minus: '-', Equal: '=', Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: '\'', BracketLeft: '[', BracketRight: ']', Backslash: '\\' }[code] || code;
   };
   const keys = () => TH.Settings.controls.keys;
+  UI.keyLabel = (action) => keyName(keys()[action]);
   const inGame = () => G.mode === 'play';
 
   // ---------- screens ----------
@@ -103,13 +104,15 @@
       let n = 0;
       const rows = cat.series.map((se) => {
         const c = TH.seriesCount(se); n += c;
-        const cells = se.books.map((id) => `<i class="${s.shelved[id] ? 'on' : ''} ${TH.BOOKS[id].gold && s.shelved[id] ? 'gold' : ''}" style="${s.shelved[id] ? 'background:' + (TH.BOOKS[id].gold ? '#f0c24e' : se.color) : ''}" title="${esc(TH.bookTitle(TH.BOOKS[id]))}${s.shelved[id] ? '' : ' — still loose'}"></i>`).join('');
+        const cells = se.books.map((id) => (s.shelved[id]
+          ? `<button class="on ${s.read[id] ? 'read' : ''}" data-act="readbook" data-id="${id}" style="background:${TH.BOOKS[id].gold ? '#f0c24e' : se.color}" title="${esc(TH.bookTitle(TH.BOOKS[id]))} — click to read" aria-label="Read ${esc(TH.bookTitle(TH.BOOKS[id]))}"></button>`
+          : `<i title="${esc(TH.bookTitle(TH.BOOKS[id]))} — still loose"></i>`)).join('');
         return `<div class="srow ${c === TH.VOLS ? 'full' : ''}"><span>${esc(se.name)}</span><div class="vols">${cells}</div><b>${c}/${TH.VOLS}</b></div>`;
       }).join('');
       return `<div class="sect"><h3><i style="background:${cat.color}"></i>${esc(cat.name)}<small>${n}/${TH.VOLS * 4}</small></h3>${rows}</div>`;
     }).join('');
     return `<div class="panel screen">${header('Card Catalogue')}<div class="body">
-      <p class="note"><b>${have} of ${NB}</b> books are on their shelves · <b>${gold} of ${goldAll}</b> gilded books found. Each little spine below is one book; hover it for its title.</p>
+      <p class="note"><b>${have} of ${NB}</b> books are on their shelves · <b>${gold} of ${goldAll}</b> gilded books found · <b>${Object.keys(s.read).length}</b> read. Each little spine is one book: click a shelved one to read it. A dot means you have read it.</p>
       <div class="meter" style="margin-bottom:1rem"><i style="width:${have / NB * 100}%"></i></div>
       <div class="tabs">${tabs}</div><div class="sects">${cards}</div></div></div>`;
   }
@@ -180,7 +183,7 @@
     <input type="range" data-path="${path}" data-unit="${unit || '%'}" min="${min}" max="${max}" step="${step}" value="${getPath(path)}" aria-label="${esc(label)}"><span class="val">${getPath(path)}${unit || '%'}</span></div>`;
   const ACTIONS = [
     ['forward', 'Walk forward'], ['back', 'Walk back'], ['left', 'Step left'], ['right', 'Step right'], ['run', 'Run (hold)'],
-    ['interact', 'Pick up / shelve'], ['grab', 'Take all of that section from a pile'],
+    ['interact', 'Pick up / shelve'], ['grab', 'Take all of that section from a pile'], ['read', 'Read a book'],
     ['ability1', 'Knack 1 — Call the Strays'], ['ability2', 'Knack 2 — Tidy Hands'], ['ability3', 'Knack 3 — Golden Hour'], ['ability4', 'Knack 4 — Wayfinder'],
     ['pause', 'Pause'], ['fullscreen', 'Toggle fullscreen'], ['mute', 'Mute all sound']
   ];
@@ -298,11 +301,49 @@
         <li><b>Walk the library.</b> Look with the mouse, move with <b>${esc(keyName(k.forward))} ${esc(keyName(k.left))} ${esc(keyName(k.back))} ${esc(keyName(k.right))}</b>, hold <b>${esc(keyName(k.run))}</b> to run.</li>
         <li><b>Pick books up.</b> Point at a book in a pile and click. Its colour tells you its section. Right-click (or <b>${esc(keyName(k.grab))}</b>) takes every book of that section from the pile.</li>
         <li><b>Shelve them.</b> Each bookcase is one section (its name is on top). Each shelf is one series. Point at the right shelf and click — the book slides into its place in volume order.</li>
+        <li><b>Read anything.</b> Point at any book, in a pile or on a shelf, and press <b>${esc(keyName(k.read))}</b> to open it. Each series is one story told across its twelve volumes, so a finished shelf reads from start to end.</li>
         <li><b>Keep a streak.</b> Clicking a shelf where nothing you carry belongs breaks your streak. A longer streak pays more coins per book. There is no timer and you can never fail.</li>
         <li><b>Finish rows</b> to unlock knacks (keys <b>${esc(keyName(k.ability1))} ${esc(keyName(k.ability2))} ${esc(keyName(k.ability3))} ${esc(keyName(k.ability4))}</b>). Shelve ${Math.round(TH.GATE_AT * 100)}% of a room to open the door to the next.</li>
         <li><b>Spend coins</b> in the Shop on knack upgrades, a bigger book strap, faster slippers and new lighting moods. Keep an eye out for gilded books and lost bookmarks.</li>
       </ul>
       <div class="btns"><button class="btn primary" data-act="closehelp">Got it</button></div></div>`);
+  }
+  // ---------- the reader ----------
+  // A book can be opened if you can lay hands on it: it is shelved, in your arms, or the one you just pointed at.
+  const canOpen = (id) => !!S().shelved[id] || G.held.includes(id) || id === UI._bookFirst;
+  UI.openBook = (id) => {
+    const b = TH.BOOKS[id], se = TH.SERIES[b.series], cat = TH.CATS[b.cat], story = TH.STORIES && TH.STORIES[se.id] && TH.STORIES[se.id][b.vol];
+    if (modalKind !== 'book') { UI._bookFrom = modalKind; UI._bookFirst = id; if (inGame() && !G.paused) G.pause(true); }
+    if (!S().read[id]) { S().read[id] = 1; TH.Save.commit(); TH.checkAch(); }
+    const title = story ? story[0] : 'Faded Pages', text = story ? story[1] : 'The ink on these pages has faded past reading. Perhaps the next volume has fared better.';
+    const verse = cat.name === 'Poetry';
+    const paras = text.split(/\n\s*\n/).map((p) => `<p>${esc(p)}</p>`).join('');
+    const nav = (d) => {
+      const v = b.vol + d;
+      if (v < 0 || v >= TH.VOLS) return `<span class="rnav"></span>`;
+      const nid = se.books[v], ok = canOpen(nid);
+      return `<button class="btn small rnav ${ok ? '' : 'off'}" ${ok ? `data-act="readbook" data-id="${nid}"` : 'disabled title="You have not found this volume yet"'}>${d < 0 ? '‹ ' : ''}${ok ? '' : ico('lock') + ' '}Vol. ${TH.ROMAN[v]}${d > 0 ? ' ›' : ''}</button>`;
+    };
+    modalKind = 'book';
+    const m = $('#modal');
+    m.innerHTML = `<div class="reader" style="--cover:${b.gold ? '#c9962c' : se.color}">
+      <div class="spread">
+        <div class="page left"><small>${esc(cat.name)}</small><h2>${esc(se.name)}</h2><div class="orn"></div>
+          <p class="vol">Volume ${TH.ROMAN[b.vol]}</p><h3>${esc(title)}</h3><p class="lib">${b.gold ? 'Gilded edition · ' : ''}Emberwick Library</p></div>
+        <div class="page right ${verse ? 'verse' : ''}"><div class="text">${paras}</div><div class="folio">— ${TH.ROMAN[b.vol]} —</div></div>
+      </div>
+      <div class="reader-bar">${nav(-1)}<button class="btn small primary" data-act="closebook">Close the book · ${esc(keyName(keys().read))}</button>${nav(1)}</div>
+    </div>`;
+    m.classList.remove('hidden');
+    TH.Audio.play('pick');
+  };
+  function closeBook() {
+    const from = UI._bookFrom || '';
+    UI._bookFirst = -1;
+    if (from.startsWith('view:')) { modalKind = ''; UI.show(from.slice(5), true); }
+    else if (from === 'pause') pauseMenu();
+    else if (inGame()) resume();
+    else closeModal();
   }
   UI.finale = () => {
     if (!inGame()) return;
@@ -424,6 +465,7 @@
   }
   function goBack() {
     if (rebinding) { rebinding = null; redraw(); return; }
+    if (modalKind === 'book') return closeBook();
     if (modalKind === 'help') return act.closehelp();
     if (modalKind === 'confirm') return act.no();
     if (modalKind === 'finale') return;
@@ -438,6 +480,9 @@
     back: () => goBack(),
     enter: () => enterGame(),
     pause: () => togglePause(),
+    read: () => G.read(),
+    readbook: (el) => UI.openBook(+el.dataset.id),
+    closebook: () => closeBook(),
     resume: () => resume(),
     totitle: () => toTitle(),
     help: () => helpDialog(),
@@ -537,8 +582,10 @@
     } else if (typing) return;
     else if (a === 'pause') { e.preventDefault(); togglePause(); }
     else if (a === 'mute') UI.toast('info', TH.Audio.toggleMute() ? 'Sound muted' : 'Sound on');
+    else if (a === 'read' && modalKind === 'book') closeBook();
     else if (playing) {
       if (a === 'interact') G.interact();
+      else if (a === 'read') G.read();
       else if (a === 'grab') G.grabAll();
       else if (a.startsWith('ability')) G.useAbility(+a.slice(7) - 1);
     }
