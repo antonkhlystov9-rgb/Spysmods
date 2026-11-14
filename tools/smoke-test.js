@@ -126,6 +126,38 @@ const { chromium } = require('playwright');
   await frames();
   assert(await ev((m) => TH.Game.interact(true) === false && TH.Save.data.stats.mistakes === m, rep), 'hold-to-repeat never counts a wrong shelf');
 
+  // --- regressions around taking books down and dropping them ---
+  await ev(() => TH.Game.debug.flush()); await landed();
+  // a book can never be dropped past a locked door, even pressed right up against it
+  const past = await ev(() => { const D = TH.Game.debug, g = D.gates[0], b = D.loose[0].find((x) => x.st === 'loose'); D.take(b.id); D.stand(g.x - 0.35, 0); D.lookAt(g.x + 2, 1.62, 0); return b.id; });
+  await frames(); await page.keyboard.press('KeyQ'); await landed();
+  assert(await ev((id) => { const D = TH.Game.debug, b = D.books[id]; return b.st === 'loose' && b.room === 0 && b.lx < D.gates[0].x - 0.2; }, past), 'a book dropped against a locked door stays on your side of it');
+  await ev(() => { const D = TH.Game.debug, t = D.tables.find((x) => x.wing === 1), b = D.loose[0].find((x) => x.st === 'loose'); D.take(b.id); D.stand(D.gates[0].x - 0.35, 0.5); D.lookAt(t.x - 0.7, t.top, t.z + (t.z > 0 ? -0.4 : 0.4)); });
+  await frames(); await page.keyboard.press('KeyQ'); await landed();
+  assert(await ev(() => TH.Game.debug.loose[1].length === 288 && TH.Game.debug.loose[1].every((b) => b.base < 0.1)), 'nor onto a table in the locked room');
+  // a bookcase finished by putting back a book taken from an already complete row still counts
+  const caseFix = async () => {
+    const fill = async (ids) => { for (const id of ids) await ev((i) => { const D = TH.Game.debug; if (D.books[i].st === 'loose') { D.take(i); D.put(i); } }, id); await landed(); };
+    const cat = await ev(() => TH.CATS.find((c) => c.wing === 0 && c.series.every((se) => se.books.every((id) => TH.Game.debug.books[id].st === 'loose'))).id);
+    const rows = await ev((c) => TH.CATS[c].series.map((se) => se.books.slice()), cat);
+    await fill(rows[0]);
+    const r0 = await ev(() => TH.Save.data.stats.rows);
+    assert(await ev((id) => TH.Game.debug.down(id), rows[0][3]), 'a book comes down from a finished row');
+    await page.keyboard.press('KeyQ'); await landed();
+    await fill(rows[1]); await fill(rows[2]);
+    // while the last book of a row is still in the air, its neighbours cannot be pulled out from under it
+    await fill(rows[3].slice(0, 11));
+    const mid = await ev(([last, other]) => { const D = TH.Game.debug; D.take(last); D.put(last); return D.down(other); }, [rows[3][11], rows[3][0]]);
+    await landed();
+    assert(mid === false && await ev((id) => TH.Game.debug.books[id].st === 'shelf', rows[3][0]), 'a book cannot be taken from a row while another is still flying into it');
+    const c0 = await ev(() => ({ cases: TH.Save.data.stats.cases, coins: TH.Save.data.coins, rows: TH.Save.data.stats.rows }));
+    assert(c0.rows === r0 + 3, 'the three other rows count as complete');
+    await fill([rows[0][3]]);
+    const c1 = await ev(() => ({ cases: TH.Save.data.stats.cases, coins: TH.Save.data.coins, rows: TH.Save.data.stats.rows }));
+    assert(c1.cases === c0.cases + 1 && c1.coins >= c0.coins + 60 && c1.rows === c0.rows, 'the bookcase is credited when that last book goes back (' + JSON.stringify([c0, c1]) + ')');
+  };
+  await caseFix();
+
   if (process.env.QUICK) { await browser.close(); console.log(errors.length ? '\nERRORS:\n' + errors.join('\n') : '\nQuick test passed.'); process.exit(errors.length ? 1 : 0); }
 
   // lost bookmark

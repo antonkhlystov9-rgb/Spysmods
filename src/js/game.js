@@ -1042,6 +1042,7 @@
     if (b.st !== 'shelf') return false;
     if (G.held.length + pending >= cap()) { TH.Audio.play('deny'); TH.UI.flash('Your hands are full'); return false; }
     const s = S(), row = cases[b.def.cat].rows[b.se.row];
+    if (row.landed !== row.filled) return false;                      // a book is still on its way into this row: let it land first
     row.slots[b.def.vol] = -1; row.filled--; row.landed--; row.cs.done = false; s.shelved[b.id] = 0;
     b.st = 'held'; b.vis = false; write(b); G.held.push(b.id);
     s.stats.mostHeld = Math.max(s.stats.mostHeld, G.held.length);
@@ -1053,17 +1054,19 @@
     const o = camera.position, d = camera.getWorldDirection(_v2), a = G.aim;
     if (a && a.type === 'pile') return { x: a.book.lx + rand(-0.06, 0.06), z: a.book.lz + rand(-0.06, 0.06), base: a.book.base };
     let bt = reach() + 0.4, spot = null;
+    const here = wingOf(P.x);
     for (const t of tables) {
+      if (t.wing !== here) continue;                                  // never through a wall or a locked door
       const tt = rayBox(o.x, o.y, o.z, d.x, d.y, d.z, t.x - 0.8, t.x + 0.8, 0.72, t.top, t.z - 0.45, t.z + 0.45);
       if (tt >= 0 && tt < bt) { bt = tt; spot = { x: clamp(o.x + d.x * tt, t.x - 0.64, t.x + 0.64), z: clamp(o.z + d.z * tt, t.z - 0.3, t.z + 0.3), base: t.top }; }
     }
     if (d.y < -0.05) {
       const tt = (o.y - FLOOR) / -d.y, x = o.x + d.x * tt, z = o.z + d.z * tt;
       // only into the room you are in, or through a doorway that is open: never past a locked door
-      const here = wingOf(P.x), there = wingOf(x);
+      const there = wingOf(x);
       if (tt < bt && freeFloor(x, z) && (there === here || (Math.abs(z) < DOOR_W / 2 - 0.15 && TH.wingOpen(Math.max(here, there))))) spot = { x, z, base: FLOOR };
     }
-    if (!spot) { const x = P.x - Math.sin(P.yaw) * 0.6, z = P.z - Math.cos(P.yaw) * 0.6; spot = freeFloor(x, z) ? { x, z, base: FLOOR } : { x: P.x, z: P.z, base: FLOOR }; }
+    if (!spot) { const x = P.x - Math.sin(P.yaw) * 0.6, z = P.z - Math.cos(P.yaw) * 0.6; spot = freeFloor(x, z) && wingOf(x) === here ? { x, z, base: FLOOR } : { x: P.x, z: P.z, base: FLOOR }; }
     return spot;
   }
   G.drop = () => {
@@ -1150,12 +1153,13 @@
       TH.Save.earn(gain);
     }
     const ev = {};
-    if (row.filled === NV && !s.rowsDone[b.se.id]) {
+    if (row.filled === NV) {
+      // Each reward is paid once, but each is checked on its own: a bookcase can be finished by putting back
+      // a book taken down from a row that was already complete.
       const cs = row.cs, full = (c) => c.rows.every((r) => r.filled === NV);
-      s.rowsDone[b.se.id] = 1; ev.row = true; s.stats.rows++; TH.Save.earn(15);
-      ev.knack = TH.ABIL.find((a) => a.unlock === s.stats.rows);
-      if (full(cs) && !s.casesDone[cs.id]) {
-        s.casesDone[cs.id] = 1; ev.cs = true; s.stats.cases++; TH.Save.earn(60);
+      if (!s.rowsDone[b.se.id]) { s.rowsDone[b.se.id] = 1; ev.row = true; s.stats.rows++; TH.Save.earn(15); ev.knack = TH.ABIL.find((a) => a.unlock === s.stats.rows); }
+      if (full(cs)) {
+        if (!s.casesDone[cs.id]) { s.casesDone[cs.id] = 1; ev.cs = true; s.stats.cases++; TH.Save.earn(60); }
         if (!s.wingsDone[cs.wing] && cases.every((c) => c.wing !== cs.wing || full(c))) { s.wingsDone[cs.wing] = 1; ev.wing = true; s.stats.wings++; TH.Save.earn(250); }
       }
     }
@@ -1174,16 +1178,16 @@
     burst(b.pos, b.def.gold ? 16 : 5);
     if (b.def.gold) { TH.Audio.play('gold'); TH.UI.flash(`Gilded book! +${gain} coins`, 'good'); TH.UI.tip('gold', 'Gilded books are rare and pay a big bonus when shelved.'); }
     if (s.stats.placed === 1) TH.UI.tip('streak', 'Keep shelving without trying a wrong shelf to build a streak — a longer streak pays more per book.');
-    if (ev.row) {
-      TH.Audio.play('bin');
-      for (let v = 0; v < NV; v++) burst(slotPos(books[row.slots[v]], _v), 4);
+    if (ev.row || ev.cs || ev.wing) {
       const cs = row.cs;
+      TH.Audio.play('bin');
+      for (let v = 0; v < NV; v++) if (row.slots[v] >= 0) burst(slotPos(books[row.slots[v]], _v), 4);
+      cs.done = cs.rows.every((r) => r.filled === NV);
       if (ev.cs) {
-        cs.done = true;
-        TH.UI.banner(cs.cat.name + ' is complete!', 'A whole bookcase in order · +75 coins');
+        TH.UI.banner(cs.cat.name + ' is complete!', `A whole bookcase in order · +${ev.row ? 75 : 60} coins`);
         TH.Audio.play('level'); burst(_v.set(cs.x, CH + 0.3, cs.z), 40);
-        if (ev.wing) { setTimeout(() => TH.UI.banner(TH.WINGS[cs.wing].name + ' restored!', 'Every book back where it belongs · +250 coins'), 2600); }
-      } else TH.UI.banner('Row complete', row.se.name + ' · +15 coins');
+      } else if (ev.row) TH.UI.banner('Row complete', row.se.name + ' · +15 coins');
+      if (ev.wing) { const show = () => TH.UI.banner(TH.WINGS[cs.wing].name + ' restored!', 'Every book back where it belongs · +250 coins'); if (ev.cs) setTimeout(show, 2600); else show(); }
       const newly = ev.knack;
       if (newly) setTimeout(() => { TH.UI.banner('New knack: ' + newly.name, newly.desc(newly.vals[0])); TH.Audio.play('ach'); TH.UI.hudBuild(); TH.UI.hud(); }, 2700);
     }
@@ -1370,6 +1374,9 @@
     slot(id) { return slotPos(books[id], new T.Vector3()); },
     flush() { for (const id of G.held.slice()) shelve(books[id], true); },
     busy() { return anims.length; },
+    take(id) { if (books[id].st === 'loose') takeLoose(books[id]); refreshHand(); },
+    put(id) { shelve(books[id], true); },
+    down(id) { return takeShelved(books[id]); },
     // shelve one loose book directly (skips walking), used to fast-forward
     auto(wing) {
       for (let w = 0; w < NW; w++) { if (wing != null && w !== wing) continue; const b = loose[w].find((x) => x.st === 'loose'); if (b) { takeLoose(b); shelve(b, true); return true; } }
