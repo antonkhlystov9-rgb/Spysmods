@@ -12,7 +12,9 @@ No timer, no fail state.
 - **4 knacks** (abilities), each with 3 levels: Call the Strays, Tidy Hands, Golden Hour, Wayfinder. They unlock as you finish shelf rows.
 - **Gear** to buy: carry more books, walk faster, reach further. Plus four lighting **moods**.
 - **47 achievements**, a **Card Catalogue** that tracks every single book, rare **gilded books**, and 20 hidden **bookmarks**.
+- **Four rooms, each built differently**: a panelled reading room with a lit hearth, a tall skylit gallery with one long wall of bookcases, a stone hall with free-standing stacks, and a vault with a painted night ceiling, turning gears and a clock that tells the real time.
 - Rooms unlock as you go: shelve 60% of one to open the door to the next.
+- Wood grain with relief on shelves and furniture, plaster and stone texture on walls, printed spines and covers on every book.
 - **Settings**: rebindable keys, mouse sensitivity, invert look, hold-to-repeat; display mode, window size, graphics quality, render scale, frame limit, field of view, interface size, head bob, reduce motion; separate volume sliders for master, music, effects and ambience.
 - All art and sound are generated at runtime, so the game has no asset files.
 

@@ -159,17 +159,17 @@
       s.connect(f); f.connect(g); g.connect(ambG); s.start(); ambNodes.push(s);
     };
     if (kind === 'fire') {
-      loop(brownBuf, 'lowpass', 420, 0.5);
-      const crackle = () => {
+      // a low hearth rumble and the odd soft pop; no constant hiss
+      loop(brownBuf, 'lowpass', 150, 0.28);
+      const pop = () => {
         if (ambKind !== 'fire') return;
-        if (ac.state === 'running') noise(now(), 0.02 + Math.random() * 0.03, 0.05 + Math.random() * 0.2, 'highpass', 1400 + Math.random() * 2500, 1, ambG);
-        crackleTimer = setTimeout(crackle, 40 + Math.random() * 420);
+        if (ac.state === 'running') { const t = now(), f = 180 + Math.random() * 220; tone(f, t, 0.09, 'sine', 0.05 + Math.random() * 0.05, ambG, 0.004, f * 0.6); }
+        crackleTimer = setTimeout(pop, 1400 + Math.random() * 4200);
       };
-      crackle();
+      pop();
     } else if (kind === 'rain') {
-      loop(noiseBuf, 'highpass', 1800, 0.07);
-      loop(noiseBuf, 'bandpass', 900, 0.06);
-      loop(brownBuf, 'lowpass', 300, 0.25);
+      loop(noiseBuf, 'bandpass', 2400, 0.03);
+      loop(brownBuf, 'lowpass', 520, 0.2);
     } else if (kind === 'night') {
       loop(brownBuf, 'lowpass', 250, 0.2);
       const chirp = () => {

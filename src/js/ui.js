@@ -227,7 +227,7 @@
         + rRange('audio.music', 'Music', 0, 100, 1)
         + rRange('audio.sfx', 'Sound effects', 0, 100, 1)
         + rRange('audio.ambience', 'Ambience', 0, 100, 1)
-        + rSel('audio.ambType', 'Ambience sound', [['fire', 'Crackling fireplace'], ['rain', 'Rain on the window'], ['night', 'Summer night'], ['off', 'None']])
+        + rSel('audio.ambType', 'Background ambience', [['off', 'None'], ['fire', 'Hearth rumble'], ['rain', 'Rain on the window'], ['night', 'Summer night']], 'An optional layer under the music. Off by default.')
         + rTog('audio.muteUnfocused', 'Mute when the window is in the background');
       foot = `<button class="btn small" data-act="testsound">Test sound</button>
         <button class="btn small" data-act="resetsec" data-id="audio">Reset audio</button>`;
