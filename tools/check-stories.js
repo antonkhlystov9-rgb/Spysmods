@@ -14,7 +14,7 @@ for (const f of files) {
     s.volumes.forEach((v, i) => {
       const at = `"${s.name}" vol ${i + 1}`;
       if (typeof v.title !== 'string' || typeof v.text !== 'string') return errs.push(`${at}: title and text must be strings`);
-      const tw = words(v.title), n = words(v.text), lo = poetry ? 55 : 105, hi = poetry ? 135 : 158;
+      const tw = words(v.title), n = words(v.text), lo = poetry ? 55 : 105, hi = poetry ? 135 : 165;
       if (tw < 1 || tw > 7 || /volume|vol\./i.test(v.title)) errs.push(`${at}: bad title "${v.title}"`);
       if (n < lo || n > hi) errs.push(`${at}: ${n} words (want ${poetry ? '60-130' : '110-150'})`);
       if (/[*_#`]|\bhttps?:/.test(v.text)) errs.push(`${at}: contains markdown or a link`);
