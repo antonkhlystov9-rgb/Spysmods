@@ -30,10 +30,10 @@ const { chromium } = require('playwright');
   assert(info.series === 144 && info.names === 144 && info.cats === 36, '144 series in 36 sections');
   assert(info.pre === 0, 'a new library starts with nothing on the shelves');
   const lay = await ev(() => { const D = TH.Game.debug; let floor = 0, high = 0, apart = 0; const per = D.loose.map((l) => l.length);
-    for (const l of D.loose) for (const b of l) { if (b.base < 0.1) floor++; if (b.top > 0.4) high++; if (!l.some((o) => o !== b && Math.hypot(o.lx - b.lx, o.lz - b.lz) < 0.27)) apart++; }
+    for (const l of D.loose) for (const b of l) { if (b.base < 0.1 || b.base > 2.5) floor++; if (b.top - b.base > 0.4) high++; if (!l.some((o) => o !== b && Math.hypot(o.lx - b.lx, o.lz - b.lz) < 0.27)) apart++; }
     return { per, floor, high, apart }; });
   console.log(lay);
-  assert(lay.per.length === 6 && lay.per.every((n) => n === 288) && lay.floor === 1728, 'all 1,728 books start on the floor, 288 in each of the six rooms');
+  assert(lay.per.join() === '144,192,240,288,384,480' && lay.floor === 1728, 'all 1,728 books start on a floor, and each room holds more than the last (' + lay.per.join(', ') + ')');
   assert(lay.high === 0 && lay.apart > 1050, 'they are scattered, not stacked (' + lay.apart + ' lie on their own, tallest heap under 40 cm)');
   const st = await ev(() => { let n = 0, short = 0, words = 0; (TH.STORIES || []).forEach((se) => (se || []).forEach((v) => { n++; const w = v[1].trim().split(/\s+/).length; words += w; if (w < 50 || !v[0]) short++; })); return { n, short, words }; });
   assert(st.n === 1728 && st.short === 0, 'every one of the 1,728 books has a page to read (' + st.n + ' pages, ' + st.words + ' words)');
@@ -134,7 +134,7 @@ const { chromium } = require('playwright');
   assert(await ev((id) => { const D = TH.Game.debug, b = D.books[id]; return b.st === 'loose' && b.room === 0 && b.lx < D.gates[0].x - 0.2; }, past), 'a book dropped against a locked door stays on your side of it');
   await ev(() => { const D = TH.Game.debug, t = D.tables.find((x) => x.wing === 1), b = D.loose[0].find((x) => x.st === 'loose'); D.take(b.id); D.stand(D.gates[0].x - 0.35, 0.5); D.lookAt(t.x - 0.7, t.top, t.z + (t.z > 0 ? -0.4 : 0.4)); });
   await frames(); await page.keyboard.press('KeyQ'); await landed();
-  assert(await ev(() => TH.Game.debug.loose[1].length === 288 && TH.Game.debug.loose[1].every((b) => b.base < 0.1)), 'nor onto a table in the locked room');
+  assert(await ev(() => TH.Game.debug.loose[1].length === 192 && TH.Game.debug.loose[1].every((b) => b.base < 0.1)), 'nor onto a table in the locked room');
   // a bookcase finished by putting back a book taken from an already complete row still counts
   const caseFix = async () => {
     const fill = async (ids) => { for (const id of ids) await ev((i) => { const D = TH.Game.debug; if (D.books[i].st === 'loose') { D.take(i); D.put(i); } }, id); await landed(); };
@@ -169,18 +169,18 @@ const { chromium } = require('playwright');
   const fast = async (wing, until) => { for (let i = 0; i < 60; i++) { const done = await ev(([w, u]) => { for (let k = 0; k < 12; k++) { if (TH.shelvedCount(w) >= u) return true; if (!TH.Game.debug.auto(w)) return true; } return false; }, [wing, until]); if (done) break; await wait(60); } await landed(); };
   assert(await ev(() => !TH.Game.debug.gates[0].open), 'door to wing 2 starts locked');
   await ev(() => TH.Game.debug.flush()); await landed();
-  await fast(0, 175);
+  await fast(0, 88);
   assert(await ev(() => TH.Game.debug.gates[0].open && TH.Save.data.gates[0] === 1), 'door opens at 60% shelved');
-  await fast(0, 288); await shot('05-wing-done');
-  assert(await ev(() => TH.Save.data.stats.rows === 24 && TH.Save.data.stats.cases === 6 && TH.Save.data.stats.wings === 1), 'rows, bookcases and the wing register as complete');
-  await fast(1, 288);
+  await fast(0, 999); await shot('05-wing-done');
+  assert(await ev(() => TH.Save.data.stats.rows === 12 && TH.Save.data.stats.cases === 3 && TH.Save.data.stats.wings === 1), 'rows, bookcases and the wing register as complete');
+  await fast(1, 999); await fast(2, 999);
   assert(await ev(() => TH.ABIL.every(TH.abilUnlocked)), 'all four knacks unlock from finished rows');
 
   // --- knacks, in wing 3 ---
-  await ev(() => { const D = TH.Game.debug, cs = D.cases[12], r = cs.rows[2]; for (const a of TH.ABIL) TH.Save.data.charge[a.id] = a.need; D.stand(cs.x, cs.z + cs.s * 1.6); D.lookAt(cs.x, r.y + 0.2, cs.z); });
+  await ev(() => { const D = TH.Game.debug, cs = D.cases.find((c) => c.wing === 3), r = cs.rows[2]; for (const a of TH.ABIL) TH.Save.data.charge[a.id] = a.need; D.stand(cs.x, cs.z + cs.s * 1.6); D.lookAt(cs.x, r.y + 0.2, cs.z); });
   await frames(); await page.keyboard.press('Digit1'); await wait(400); await landed();
-  const called = await ev(() => TH.Game.held.map((id) => TH.BOOKS[id].cat));
-  assert(called.length === 3 && called.every((c) => c === 12), 'Call the Strays pulls 3 books of that section (' + called.length + ')');
+  const called = await ev(() => TH.Game.held.map((id) => TH.BOOKS[id].cat)), want = await ev(() => TH.Game.debug.cases.find((c) => c.wing === 3).id);
+  assert(called.length === 3 && called.every((c) => c === want), 'Call the Strays pulls 3 books of that section (' + called.length + ')');
   await shot('06-knack');
   await page.keyboard.press('Digit2'); await wait(1500); await landed();
   assert(await ev(() => TH.Game.held.length === 0), 'Tidy Hands shelves what you carry');
@@ -210,10 +210,39 @@ const { chromium } = require('playwright');
   await page.click('[data-act="back"]'); await page.click('[data-act="go"][data-to="ach"]'); await wait(150); await shot('12-achievements');
   await page.click('[data-act="back"]'); await page.click('[data-act="resume"]'); await wait(300);
   assert(await ev(() => !TH.Game.paused && TH.Game.mode === 'play'), 'resume returns to the game');
-  await ev(() => { const D = TH.Game.debug; D.stand(22, 1.2); D.lookAt(28, 1.5, -4); }); await frames(4); await shot('13-morning-mood');
+  await ev(() => { const D = TH.Game.debug; D.stand(18, 1.2); D.lookAt(23, 1.5, -4); }); await frames(4); await shot('13-morning-mood');
 
   // --- finish the library ---
-  for (const w of [2, 3, 4, 5]) { await fast(w, 288); assert(await ev((k) => k === 5 || TH.wingOpen(k + 1), w), 'room ' + (w + 1) + ' done, the next door is open'); }
+  await fast(3, 999);
+  // --- the upper floor: walk up the Attic's stairs for real, pick up, drop and shelve up there, and find it all again after a reload ---
+  const loft = await ev(() => { const D = TH.Game.debug, st = D.stairs[4], up = D.uppers[4]; D.flush(); D.stand(st.x0 - 0.6, (st.z0 + st.z1) / 2); D.lookAt(st.x1, 1.62, (st.z0 + st.z1) / 2); return { st, up }; });
+  assert(await ev(() => TH.wingOpen(4)), 'the door to the Attic is open');
+  await page.keyboard.down('KeyW'); for (let i = 0; i < 60; i++) { await frames(2); if (await ev(([x]) => TH.Game.debug.P.x > x, [loft.st.x1 - 0.5])) break; } await page.keyboard.up('KeyW');
+  assert(await ev((y) => Math.abs(TH.Game.debug.P.y - y) < 0.01, loft.up.y), 'walking up the stairs brings you to the upper floor (' + (await ev(() => TH.Game.debug.P.y.toFixed(2))) + ' m up)');
+  await ev(() => { const D = TH.Game.debug; D.lookAt(D.P.x, D.P.y + 1.62, D.P.z - 5); }); await frames();
+  await page.keyboard.down('KeyW'); await frames(6); await page.keyboard.up('KeyW');
+  assert(await ev((u) => { const P = TH.Game.debug.P; return P.y === u.y && P.z < u.z1 && P.z > u.z0; }, loft.up), 'and you can step off the landing onto it');
+  await ev(() => { const D = TH.Game.debug; D.lookAt(D.P.x, D.P.y + 1.62, D.P.z + 5); }); await frames();
+  await page.keyboard.down('KeyW'); await frames(12); await page.keyboard.up('KeyW');
+  assert(await ev((u) => { const P = TH.Game.debug.P; return P.y === u.y && P.z <= u.z1 + 1.2 && TH.Game.debug.groundAt(P.x, P.z, P.y) !== null; }, loft.up), 'the railing stops you walking off the edge');
+  const upBook = await ev(() => { const D = TH.Game.debug, l = D.loose[4]; for (let i = l.length - 1; i >= 0; i--) { const b = l[i]; if (b.base > 2.5 && !l.slice(i + 1).some((o) => Math.hypot(o.lx - b.lx, o.lz - b.lz) < 0.3)) { D.stand(b.lx + 0.3, Math.min(b.lz + 0.4, D.uppers[4].z1 - 0.1), D.uppers[4].y); D.lookAt(b.pos.x, b.pos.y, b.pos.z); return b.id; } } return -1; });
+  await frames(); await shot('13b-loft');
+  assert(upBook >= 0 && await ev((id) => TH.Game.aim && TH.Game.aim.type === 'pile' && TH.Game.aim.book.id === id, upBook), 'books lie on the upper floor too, and the crosshair finds one');
+  await page.mouse.down(); await page.mouse.up(); await frames();
+  assert(await ev((id) => TH.Game.held.includes(id), upBook), 'it can be picked up');
+  await ev(() => { const D = TH.Game.debug, u = D.uppers[4]; D.stand(u.x0 + 5.2, u.z0 + 1.6, u.y); D.lookAt(u.x0 + 5.9, u.y, u.z0 + 1.7); });
+  await frames(); await page.keyboard.press('KeyQ'); await landed();
+  assert(await ev(([id, u]) => { const b = TH.Game.debug.books[id]; return b.st === 'loose' && Math.abs(b.base - u.y) < 0.01 && b.pos.y > u.y && b.pos.y < u.y + 0.5 && Math.hypot(b.lx - (u.x0 + 5.9), b.lz - (u.z0 + 1.7)) < 0.4; }, [upBook, loft.up]), 'and put down again on the upper floor, where you look');
+  const under = await ev(() => { const D = TH.Game.debug, u = D.uppers[4], b = D.loose[4].find((x) => x.base > 2.5 && x.lz < u.z1 - 0.6); D.stand(b.lx, b.lz + 0.3, 0); D.lookAt(b.pos.x, b.pos.y, b.pos.z); return b.id; });
+  await frames();
+  assert(await ev((id) => !(TH.Game.aim && TH.Game.aim.type === 'pile' && TH.Game.aim.book.id === id), under), 'a book upstairs cannot be reached through the floor from below');
+  const upCase = await ev(() => { const D = TH.Game.debug, cs = D.cases.find((c) => c.wing === 4 && c.y0 > 0), b = D.loose[4].find((x) => x.st === 'loose' && x.def.cat === cs.id); D.take(b.id); const sl = D.slot(b.id); D.stand(sl.x, cs.z + cs.s * 1.4, cs.y0); D.lookAt(sl.x, sl.y, sl.z); return { id: b.id, y: sl.y }; });
+  await frames(); await ev(() => TH.Game.interact()); await landed();
+  assert(upCase.y > 3 && await ev((id) => { const D = TH.Game.debug; return D.books[id].st === 'shelf' && D.books[id].pos.distanceTo(D.slot(id)) < 0.001; }, upCase.id), 'a book shelves into an upstairs bookcase');
+  const upPos = await ev((id) => { const b = TH.Game.debug.books[id]; return [b.lx, b.lz, b.base]; }, upBook);
+  await page.reload({ timeout: 180000 }); await wait(900); await page.click('[data-act="enter"]'); await wait(700);
+  assert(await ev(([id, p, u]) => { const D = TH.Game.debug, b = D.books[id]; return b.st === 'loose' && Math.abs(b.lx - p[0]) < 0.002 && Math.abs(b.lz - p[1]) < 0.002 && Math.abs(b.base - p[2]) < 0.001 && Math.abs(D.P.y - u.y) < 0.01; }, [upBook, upPos, loft.up]), 'after closing and reopening, that book is still upstairs, and so are you');
+  for (const w of [4, 5]) { await fast(w, 999); assert(await ev((k) => k === 5 || TH.wingOpen(k + 1), w), 'room ' + (w + 1) + ' done, the next door is open'); }
   await page.waitForSelector('#modal .dialog .tally', { timeout: 60000 });
   await shot('14-finale');
   assert(await ev(() => TH.shelvedCount() === 1728 && TH.Save.data.stats.cases === 36 && TH.Save.data.stats.rows === 144 && TH.Save.data.stats.wings === 6), 'every book can be shelved (36 bookcases, 144 rows, 6 rooms)');
@@ -225,11 +254,11 @@ const { chromium } = require('playwright');
   await page.reload({ timeout: 180000 }); await wait(900);
   assert(await ev(() => TH.shelvedCount() === 1728 && TH.Save.data.upg.satchel === 1 && TH.Settings.controls.keys.grab === 'KeyG'), 'progress and settings persist after reload');
   await page.click('[data-act="go"][data-to="settings"]'); await page.click('[data-act="reshuffle"]'); await page.click('[data-act="yes"]'); await wait(400);
-  assert(await ev(() => TH.shelvedCount() === 0 && TH.Game.debug.loose.every((l) => l.length === 288) && TH.Save.data.upg.satchel === 1 && TH.Save.data.stats.rounds === 1), 'reshuffle puts every book back on the floor but keeps upgrades');
+  assert(await ev(() => TH.shelvedCount() === 0 && TH.Game.debug.loose.map((l) => l.length).join() === '144,192,240,288,384,480' && TH.Save.data.upg.satchel === 1 && TH.Save.data.stats.rounds === 1), 'reshuffle puts every book back on the floor but keeps upgrades');
   // --- a save made in the old four-room library keeps everything and simply gains the new rooms ---
-  await ev(() => { const s = TH.Save.data; s.shelved = new Array(1152).fill(1); s.gates = { 0: 1, 1: 1, 2: 1 }; s.finaleShown = 1; s.coins = 4321; TH.Save.flush(); });
+  await ev(() => { const s = TH.Save.data; s.shelved = new Array(1152).fill(1); s.gates = { 0: 1, 1: 1, 2: 1 }; s.finaleShown = 1; s.coins = 4321; delete s.lay; TH.Save.flush(); });
   await page.reload({ timeout: 180000 }); await wait(900);
-  assert(await ev(() => { const D = TH.Game.debug, s = TH.Save.data; return TH.shelvedCount() === 1152 && s.shelved.length === 1728 && s.coins === 4321 && D.loose[4].length === 288 && D.loose[5].length === 288 && D.loose.slice(0, 4).every((l) => l.length === 0) && TH.wingOpen(4) && !TH.wingOpen(5) && !s.finaleShown; }), 'an old four-room save keeps its 1,152 shelved books, gets the new rooms, and the door to them is open');
+  assert(await ev(() => { const D = TH.Game.debug, s = TH.Save.data; return TH.shelvedCount() === 1152 && s.shelved.length === 1728 && s.coins === 4321 && D.loose[4].length === 288 && D.loose[5].length === 288 && D.loose.slice(0, 4).every((l) => l.length === 0) && s.lay > 0 && TH.wingOpen(4) && !TH.wingOpen(5) && !s.finaleShown; }), 'an old four-room save keeps its 1,152 shelved books, gets the new rooms, and the door to them is open');
   assert(await ev(() => document.querySelector('[data-act="enter"]').textContent.includes('1152 of 1728')), 'the title screen offers to continue it');
   console.log('achievements unlocked:', await ev(() => Object.keys(TH.Save.data.ach).length), '/', info.ach, ' coins earned:', await ev(() => TH.Save.data.stats.earned));
 

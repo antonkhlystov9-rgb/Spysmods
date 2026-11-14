@@ -1,5 +1,6 @@
 // The Night Shelver — the library's catalogue: 6 rooms, 36 sections, 144 series, 1,728 books.
-// New rooms and sections go at the END of their lists: a book's number is its place in this order, and saves rely on it.
+// New sections go at the END of the list: a book's number is its place in this order, and saves rely on it.
+// Which room a section lives in is set separately (ROOM_OF), so rooms can hold different numbers of sections.
 (function () {
   'use strict';
   const TH = window.TH;
@@ -60,11 +61,22 @@
     ['Hauntings', 'The Polite Ghost|Cold Spots Catalogued|Night Watch at the Old Hall|Things That Go Bump, Gently']
   ];
 
+  // The room each section is shelved in, in the order of RAW. The rooms grow as you go: 3, 4, 5, 6, 8 and 10 sections.
+  const ROOM_OF = [
+    0, 4, 1, 5, 0, 0,       // Fables, Cookery, Gardens, Sea Voyages, Mysteries, Poetry
+    1, 1, 5, 3, 3, 1,       // Botany, Beasts, Weather, Stars, Minerals, Insects
+    2, 2, 2, 5, 2, 2,       // History, Maps, Mathematics, Medicine, Law, Philosophy
+    3, 4, 5, 3, 3, 3,       // Clockwork, Music, Theatre, Alchemy, Folklore, Dreams
+    4, 4, 4, 4, 4, 4,       // Carpentry, Needlework, Pottery, Bookbinding, Painting, Toymaking
+    5, 5, 5, 5, 5, 5        // Railways, Mountains, Inns, Letters, Festivals, Hauntings
+  ];
+  const perRoom = TH.WINGS.map((_, i) => ROOM_OF.filter((r) => r === i).length), seenInRoom = TH.WINGS.map(() => 0);
+
   TH.CATS = []; TH.SERIES = []; TH.BOOKS = [];
   const rng = TH.rng(20261113);
   RAW.forEach(([name, list], ci) => {
-    const wing = Math.floor(ci / 6), k = ci % 6;
-    const hue = (k * 60 + wing * 16 + 4) % 360;
+    const wing = ROOM_OF[ci], k = seenInRoom[wing]++;
+    const hue = (k * 360 / perRoom[wing] + wing * 16 + 4) % 360;        // spread evenly round the colour wheel within a room
     const cat = { id: ci, name, wing, hue, color: TH.hsl(hue, 0.52, 0.44), series: [] };
     TH.CATS.push(cat);
     list.split('|').forEach((sname, si) => {

@@ -311,7 +311,7 @@
     UI._from = modalKind;
     openModal('help', `<div class="panel dialog help"><h2>How to Play</h2>
       <ul>
-        <li><b>Walk the library.</b> Look with the mouse, move with <b>${esc(keyName(k.forward))} ${esc(keyName(k.left))} ${esc(keyName(k.back))} ${esc(keyName(k.right))}</b>, hold <b>${esc(keyName(k.run))}</b> to run.</li>
+        <li><b>Walk the library.</b> Six rooms, each bigger than the last; the two biggest have an upstairs, so look for the stairs. Look with the mouse, move with <b>${esc(keyName(k.forward))} ${esc(keyName(k.left))} ${esc(keyName(k.back))} ${esc(keyName(k.right))}</b>, hold <b>${esc(keyName(k.run))}</b> to run.</li>
         <li><b>Pick books up.</b> They are scattered all over the floor: point at one and click. Every book of a series is the same colour. Right-click (or <b>${esc(keyName(k.grab))}</b>) gathers the nearby books of the same section.</li>
         <li><b>Put books down.</b> Press <b>${esc(keyName(k.drop))}</b> to drop the last book you picked up, on the floor or on a table. Changed your mind about a shelved book? Click it with empty hands (or right-click it) to take it back down.</li>
         <li><b>Shelve them.</b> Each bookcase is one section (its name is on top). Each shelf is one series. Point at the right shelf and click — the book slides into its place in volume order.</li>
