@@ -30,7 +30,7 @@
     { w: 12, d: 9, h: 5.8, wood: ['#c79a5e', '#9b7340', '#e0bd85'], floor: 'boards', ceil: '#eadfc6', frame: '#9b7340', win: [0.9, 0.9, 2.05],
       upper: { x0: 0, x1: 12, z0: -4.5, z1: -1.9, y: 2.9 }, upShare: 0.26,                                   // a loft along the north side
       stair: { x0: 6.6, x1: 11.2, z0: -1.9, z1: -0.8, flat: 1.0, parapet: ['S', 'E'] },
-      rails: [[0.15, -1.9, 10.2, -1.9], [11.2, -1.9, 11.85, -1.9]],
+      rails: [[0.15, -1.9, 9.9, -1.9], [11.2, -1.9, 11.85, -1.9]],
       cases: [[2.5, 'N', 1, 1], [6, 'N', 1, 1], [9.5, 'N', 1, 1], [2.0, 'N', 1], [4.0, 'N', 1], [2.2, 'S', -1], [6, 'S', -1], [9.8, 'S', -1]],
       tables: [[3.2, 0.9], [8.4, 1.9], [4.2, 3.1]], winN: [[4.25, 4.45], [7.75, 4.45]], winS: [4.1, 8.0, [3, 4.4], [6, 4.4], [9, 4.4]],
       lamps: [[11.5, -4.0]], hangs: [[3.2, 1.3, 3.9], [8.8, 1.3, 3.9]] },
@@ -570,6 +570,12 @@
           occluders.push([cx - run / 2, cx + run / 2, 0, top, st.z0, st.z1]);
           for (const side of st.parapet) if (side === 'N' || side === 'S') solid(cx, top + 0.5, side === 'N' ? st.z0 + 0.03 : st.z1 - 0.03, run, 1.0, 0.06, woodD);
         }
+        // The parapets are solid on every floor, so you get on at the foot and off at the top, and nobody on the ramp can
+        // ever be standing where the upper floor's railing is.
+        const ramp1 = sa.x1 - st.flat;
+        block(sa.x0, st.parapet.includes('N') ? sa.x1 : ramp1 - 0.3, st.z0 - 0.04, st.z0 + 0.04, -1);     // (stopping short leaves a wide way off at the top)
+        block(sa.x0, st.parapet.includes('S') ? sa.x1 : ramp1, st.z1 - 0.04, st.z1 + 0.04, -1);
+        if (st.parapet.includes('E')) block(sa.x1 - 0.04, sa.x1 + 0.04, st.z0, st.z1, -1);
         if (st.flat) {
           const cx = sa.x1 - st.flat / 2;
           solid(cx, H / 2, zc, st.flat, H, wd, woodL); occluders.push([sa.x1 - st.flat, sa.x1, 0, H, st.z0, st.z1]);
@@ -1591,7 +1597,11 @@
     const tryMove = (nx, nz, ax, dir) => {
       nx = clamp(nx, PR, LEN - PR); nz = clamp(nz, -halfAt(nx) + PR, halfAt(nx) - PR);
       const lv = lvOf(P.y);
-      for (const c of colliders) if (c.on && (c.lv === undefined || c.lv === lv) && nx > c.x0 - PR && nx < c.x1 + PR && nz > c.z0 - PR && nz < c.z1 + PR) { if (ax) nz = dir > 0 ? c.z0 - PR : c.z1 + PR; else nx = dir > 0 ? c.x0 - PR : c.x1 + PR; }
+      for (const c of colliders) {
+        if (!c.on || (c.lv !== undefined && c.lv !== lv) || !(nx > c.x0 - PR && nx < c.x1 + PR && nz > c.z0 - PR && nz < c.z1 + PR)) continue;
+        if (!c.wall && P.x > c.x0 - PR && P.x < c.x1 + PR && P.z > c.z0 - PR && P.z < c.z1 + PR) continue;      // already inside it somehow: let them walk out
+        if (ax) nz = dir > 0 ? c.z0 - PR : c.z1 + PR; else nx = dir > 0 ? c.x0 - PR : c.x1 + PR;
+      }
       const gy = groundAt(nx, nz, P.y);
       if (gy === null) return;
       P.x = nx; P.z = nz; P.y = gy;
@@ -1672,7 +1682,7 @@
     books, loose, tables, cases, gates, marks, P,
     lookAt(x, y, z) { const dx = x - P.x, dy = y - P.y - EYE, dz = z - P.z; P.yaw = Math.atan2(-dx, -dz); P.pitch = Math.atan2(dy, Math.hypot(dx, dz)); },
     stand(x, z, y) { P.x = x; P.z = z; P.y = camY = y || 0; },
-    plans: PLANS, X0, uppers, stairs: stairsA, groundAt,
+    plans: PLANS, X0, uppers, stairs: stairsA, groundAt, colliders, PR, STEP,
     slot(id) { return slotPos(books[id], new T.Vector3()); },
     flush() { for (const id of G.held.slice()) shelve(books[id], true); },
     busy() { return anims.length; },

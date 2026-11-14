@@ -219,6 +219,12 @@ const { chromium } = require('playwright');
   assert(await ev(() => TH.wingOpen(4)), 'the door to the Attic is open');
   await page.keyboard.down('KeyW'); for (let i = 0; i < 60; i++) { await frames(2); if (await ev(([x]) => TH.Game.debug.P.x > x, [loft.st.x1 - 0.5])) break; } await page.keyboard.up('KeyW');
   assert(await ev((y) => Math.abs(TH.Game.debug.P.y - y) < 0.01, loft.up.y), 'walking up the stairs brings you to the upper floor (' + (await ev(() => TH.Game.debug.P.y.toFixed(2))) + ' m up)');
+  // hugging either side of the stairs must work too: the loft's railing runs right beside them
+  for (const side of [0, 1]) {
+    await ev(([st, side]) => { const D = TH.Game.debug; D.stand(st.x0 - 0.6, side ? st.z1 - 0.45 : st.z0 + 0.45); D.lookAt(st.x1, 1.62, side ? st.z1 + 0.3 : st.z0 - 0.3); }, [loft.st, side]);     // start in the opening, drifting into that side
+    await page.keyboard.down('KeyW'); for (let i = 0; i < 60; i++) { await frames(2); if (await ev(([x]) => TH.Game.debug.P.x > x, [loft.st.x1 - 0.5])) break; } await page.keyboard.up('KeyW');
+    assert(await ev((y) => Math.abs(TH.Game.debug.P.y - y) < 0.01, loft.up.y), 'pressed against the ' + (side ? 'outer' : 'loft') + ' side of the stairs you still reach the top (' + (await ev(() => { const P = TH.Game.debug.P; return [P.x, P.z, P.y].map((v) => v.toFixed(2)).join(', '); })) + ')');
+  }
   await ev(() => { const D = TH.Game.debug; D.lookAt(D.P.x, D.P.y + 1.62, D.P.z - 5); }); await frames();
   await page.keyboard.down('KeyW'); await frames(6); await page.keyboard.up('KeyW');
   assert(await ev((u) => { const P = TH.Game.debug.P; return P.y === u.y && P.z < u.z1 && P.z > u.z0; }, loft.up), 'and you can step off the landing onto it');

@@ -90,6 +90,7 @@ tools/check-stories.js validates the book text (counts, lengths, format)
 tools/build-stories.js compiles content/stories into src/js/stories.js
 tools/make-icon.js    regenerates the app icons
 tools/build-html.js   packs the game into one html file
+tools/check-reach.js  walks everywhere the player can go and checks every shelf, bookmark and book can be reached
 ```
 
 Progress is saved automatically after everything you do: which books are shelved, where every loose book lies, what you are carrying and where you stand. Each place you play (the website, the installed app, the single file) keeps its own save; **Settings → Gameplay** can save your progress to a file and load it somewhere else. You can also reshuffle the library or erase everything there.
