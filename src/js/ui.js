@@ -39,6 +39,8 @@
   let screen = 'title', modalKind = '', catWing = 0, shopTab = 'abil', setTab = 'game';
   let installEvent = null, installLate = false;
   // the hosted website (not the desktop app, not the single-file version)
+  // inside someone else's page (an embedded preview) the browser will not let us hand over or pick a file
+  const framed = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
   const onWeb = !TH.desktop && /^https?:$/.test(location.protocol) && !!document.querySelector('link[rel="manifest"]');
   let rebinding = null, tipTimer = 0, flashTimer = 0, bannerTimer = 0, lastStreak = 0;
 
@@ -200,9 +202,9 @@
         + rTog('game.crosshair', 'Crosshair')
         + rTog('game.exact', 'Exact shelving', 'Harder: you must point at the right gap in the row, not just the right row. Pays +1 coin per book.')
         + rTog('game.tips', 'Tutorial tips', 'Short hints the first time something new shows up.')
-        + `<p class="note"><b>Your progress saves by itself</b> after everything you do: shelved books, where every loose book lies, what you carry and where you stand. Each place you play (website, installed app, single file) keeps its own save. To move one across, save it to a file here and load that file there.</p>`;
-      foot = `<button class="btn small" data-act="savefile">Save progress to a file</button>
-        <button class="btn small" data-act="loadfile">Load progress from a file…</button>
+        + `<p class="note"><b>Your progress saves by itself</b> after everything you do: shelved books, where every loose book lies, what you carry and where you stand. Each place you play (website, installed app, single file) keeps its own save.${framed ? '' : ' To move one across, save it to a file here and load that file there.'}</p>`;
+      foot = `${framed ? '' : `<button class="btn small" data-act="savefile">Save progress to a file</button>
+        <button class="btn small" data-act="loadfile">Load progress from a file…</button>`}
         <button class="btn small" data-act="resettips">Show all tips again</button>
         <button class="btn small" data-act="reshuffle">Reshuffle the library…</button>
         <button class="btn small danger" data-act="wipe">Erase all progress…</button>`;
