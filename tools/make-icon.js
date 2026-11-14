@@ -19,7 +19,7 @@ const fs = require('fs'); const path = require('path'); const { chromium } = req
     x.fillStyle = '#8a5a3a'; x.beginPath(); x.roundRect(60, 400, 392, 34, 8); x.fill(); x.lineWidth = 12; x.strokeStyle = '#3b2a1d'; x.stroke();
     const scaled = (n) => { const s = document.createElement('canvas'); s.width = s.height = n; const g = s.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(c, 0, 0, n, n); return s; };
     return {
-      png512: c.toDataURL('image/png'), png256: scaled(256).toDataURL('image/png'),
+      png512: c.toDataURL('image/png'), png256: scaled(256).toDataURL('image/png'), png192: scaled(192).toDataURL('image/png'),
       raw: sizes.filter((n) => n < 256).map((n) => Array.from(scaled(n).getContext('2d').getImageData(0, 0, n, n).data))
     };
   }, SIZES);
@@ -28,6 +28,8 @@ const fs = require('fs'); const path = require('path'); const { chromium } = req
   const dir = path.resolve(__dirname, '..');
   fs.writeFileSync(path.join(dir, 'build', 'icon.png'), b64(out.png512));
   fs.writeFileSync(path.join(dir, 'src', 'icon.png'), b64(out.png256));
+  fs.writeFileSync(path.join(dir, 'src', 'icon-192.png'), b64(out.png192));      // for installing the web version as an app
+  fs.writeFileSync(path.join(dir, 'src', 'icon-512.png'), b64(out.png512));
 
   // .ico: classic 32-bit bitmaps for the small sizes, PNG for 256px
   const images = SIZES.map((n, i) => {

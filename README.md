@@ -39,6 +39,8 @@ Everything under `src/` is a static website, and this repo publishes it automati
 
 One-time setup: in the repository on GitHub, open **Settings → Pages** and set **Source** to **GitHub Actions**. After the next push (or a manual run of the "Publish web version" workflow) the game is live at `https://<your-username>.github.io/<repo-name>/`. Progress is saved in each player's own browser.
 
+**Install it from the browser (no download, nothing for antivirus to flag):** in Chrome or Edge, open the link and click **Install as an app** on the title screen, or the install icon at the right end of the address bar. The game then has its own window, a desktop and Start-menu icon, and works offline. The web version stores its files with a service worker (`src/sw.js`) and describes itself with `src/manifest.webmanifest`.
+
 **From source** (needs [Node.js](https://nodejs.org) 20+):
 
 ```

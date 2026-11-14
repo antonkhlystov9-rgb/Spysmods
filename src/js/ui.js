@@ -37,6 +37,7 @@
 
   // ---------- state ----------
   let screen = 'title', modalKind = '', catWing = 0, shopTab = 'abil', setTab = 'game';
+  let installEvent = null;
   let rebinding = null, tipTimer = 0, flashTimer = 0, bannerTimer = 0, lastStreak = 0;
 
   const keyName = (code) => {
@@ -91,7 +92,7 @@
         <button class="btn" data-act="go" data-to="shop">${ico('bag')} Shop</button>
         <button class="btn" data-act="go" data-to="settings">${ico('gear')} Settings</button>
         <button class="btn ghost" data-act="help">How to Play</button>
-        ${TH.desktop ? '<button class="btn ghost" data-act="quit">Quit</button>' : '<span></span>'}
+        ${TH.desktop ? '<button class="btn ghost" data-act="quit">Quit</button>' : installEvent ? '<button class="btn ghost" data-act="install">Install as an app</button>' : '<span></span>'}
       </div>
     </div>
     <div class="title-foot"><span>The Night Shelver v${TH.VERSION}</span><span>${TH.SERIES.filter((se) => TH.seriesCount(se) === TH.VOLS).length}/${TH.SERIES.length} rows complete · <span class="js-coins">${fmt(s.coins)}</span> coins</span></div>`;
@@ -492,6 +493,7 @@
     closehelp: () => { if (UI._from === 'pause') pauseMenu(); else closeModal(); },
     abil: (el) => G.useAbility(+el.dataset.i),
     quit: () => { TH.Save.flush(); if (TH.desktop) TH.desktop.quit(); },
+    install: () => { const ev = installEvent; if (!ev) return; installEvent = null; ev.prompt(); if (screen === 'title') UI.show('title', true); },
     catwing: (el) => { catWing = +el.dataset.id; redraw(); },
     shoptab: (el) => { shopTab = el.dataset.id; redraw(); },
     settab: (el) => { setTab = el.dataset.id; rebinding = null; redraw(); },
@@ -616,6 +618,14 @@
       else return;
       TH.saveSettings(); if (currentView() === 'settings') redraw();
     });
+  }
+
+  // ---------- web version: installable, and playable offline ----------
+  // Chrome and Edge offer to install the site as an app; we keep their offer and show our own button for it.
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; if (screen === 'title' && !modalKind) UI.show('title', true); });
+  window.addEventListener('appinstalled', () => { installEvent = null; if (screen === 'title' && !modalKind) UI.show('title', true); UI.toast('info', 'Installed', 'The Night Shelver is now an app on this computer.'); });
+  if (!TH.desktop && 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost') && document.querySelector('link[rel="manifest"]')) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
 
   // ---------- boot ----------
