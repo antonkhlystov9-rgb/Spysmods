@@ -94,11 +94,11 @@
         ${TH.desktop ? '<button class="btn ghost" data-act="quit">Quit</button>' : '<span></span>'}
       </div>
     </div>
-    <div class="title-foot"><span>The Night Shelver v${TH.VERSION}</span><span>${s.stats.rows}/${TH.SERIES.length} rows complete · <span class="js-coins">${fmt(s.coins)}</span> coins</span></div>`;
+    <div class="title-foot"><span>The Night Shelver v${TH.VERSION}</span><span>${TH.SERIES.filter((se) => TH.seriesCount(se) === TH.VOLS).length}/${TH.SERIES.length} rows complete · <span class="js-coins">${fmt(s.coins)}</span> coins</span></div>`;
   }
 
   function vCatalog() {
-    const s = S(), have = TH.shelvedCount(), gold = Object.keys(s.goldFound).length, goldAll = TH.BOOKS.filter((b) => b.gold).length;
+    const s = S(), have = TH.shelvedCount(), gold = TH.BOOKS.filter((b) => b.gold && s.shelved[b.id]).length, goldAll = TH.BOOKS.filter((b) => b.gold).length;
     const tabs = TH.WINGS.map((w, i) => `<button class="tab ${i === catWing ? 'on' : ''}" data-act="catwing" data-id="${i}">${TH.wingOpen(i) ? '' : ico('lock') + ' '}${esc(w.name.replace(/^The /, ''))} ${TH.shelvedCount(i)}/${w.books}</button>`).join('');
     const cards = TH.WINGS[catWing].cats.map((cat) => {
       let n = 0;
@@ -112,7 +112,7 @@
       return `<div class="sect"><h3><i style="background:${cat.color}"></i>${esc(cat.name)}<small>${n}/${TH.VOLS * 4}</small></h3>${rows}</div>`;
     }).join('');
     return `<div class="panel screen">${header('Card Catalogue')}<div class="body">
-      <p class="note"><b>${have} of ${NB}</b> books are on their shelves · <b>${gold} of ${goldAll}</b> gilded books found · <b>${Object.keys(s.read).length}</b> read. Each little spine is one book: click a shelved one to read it. A dot means you have read it.</p>
+      <p class="note"><b>${have} of ${NB}</b> books are on their shelves · <b>${gold} of ${goldAll}</b> gilded books shelved · <b>${Object.keys(s.read).length}</b> read. Each little spine is one book: click a shelved one to read it. A dot means you have read it.</p>
       <div class="meter" style="margin-bottom:1rem"><i style="width:${have / NB * 100}%"></i></div>
       <div class="tabs">${tabs}</div><div class="sects">${cards}</div></div></div>`;
   }
@@ -228,6 +228,7 @@
         + rRange('audio.sfx', 'Sound effects', 0, 100, 1)
         + rRange('audio.ambience', 'Ambience', 0, 100, 1)
         + rSel('audio.ambType', 'Background ambience', [['off', 'None'], ['fire', 'Hearth rumble'], ['rain', 'Rain on the window'], ['night', 'Summer night']], 'An optional layer under the music. Off by default.')
+        + rTog('audio.steps', 'Footsteps', 'A soft step sound while you walk. Off by default.')
         + rTog('audio.muteUnfocused', 'Mute when the window is in the background');
       foot = `<button class="btn small" data-act="testsound">Test sound</button>
         <button class="btn small" data-act="resetsec" data-id="audio">Reset audio</button>`;
@@ -268,7 +269,8 @@
   function openModal(kind, html) {
     modalKind = kind;
     const m = $('#modal'); m.innerHTML = html; m.classList.remove('hidden');
-    const f = m.querySelector('.btn.primary, .btn'); if (f) f.focus({ preventScroll: true });
+    // a confirmation opens on Cancel, so a stray Enter can never erase anything
+    const f = kind === 'confirm' ? m.querySelector('[data-act="no"]') : m.querySelector('.btn.primary, .btn'); if (f) f.focus({ preventScroll: true });
   }
   function closeModal() { modalKind = ''; const m = $('#modal'); m.classList.add('hidden'); m.innerHTML = ''; }
   UI.confirm = (title, text, yes, cb) => {
@@ -310,14 +312,14 @@
   }
   // ---------- the reader ----------
   // A book can be opened if you can lay hands on it: it is shelved, in your arms, or the one you just pointed at.
-  const canOpen = (id) => !!S().shelved[id] || G.held.includes(id) || id === UI._bookFirst;
+  const canOpen = (id) => !!S().shelved[id] || (inGame() && G.held.includes(id)) || id === UI._bookFirst;
   UI.openBook = (id) => {
     const b = TH.BOOKS[id], se = TH.SERIES[b.series], cat = TH.CATS[b.cat], story = TH.STORIES && TH.STORIES[se.id] && TH.STORIES[se.id][b.vol];
     if (modalKind !== 'book') { UI._bookFrom = modalKind; UI._bookFirst = id; if (inGame() && !G.paused) G.pause(true); }
     if (!S().read[id]) { S().read[id] = 1; TH.Save.commit(); TH.checkAch(); }
     const title = story ? story[0] : 'Faded Pages', text = story ? story[1] : 'The ink on these pages has faded past reading. Perhaps the next volume has fared better.';
     const verse = cat.name === 'Poetry';
-    const paras = text.split(/\n\s*\n/).map((p) => `<p>${esc(p)}</p>`).join('');
+    const paras = text.split(/\n\s*\n/).map((p) => `<p${!verse && p.includes('\n') ? ' class="lines"' : ''}>${esc(p)}</p>`).join('');
     const nav = (d) => {
       const v = b.vol + d;
       if (v < 0 || v >= TH.VOLS) return `<span class="rnav"></span>`;
@@ -343,10 +345,11 @@
     if (from.startsWith('view:')) { modalKind = ''; UI.show(from.slice(5), true); }
     else if (from === 'pause') pauseMenu();
     else if (inGame()) resume();
-    else closeModal();
+    else { closeModal(); if (screen === 'catalog') redraw(); }      // show the new 'read' dot
   }
   UI.finale = () => {
     if (!inGame()) return;
+    S().finaleShown = 1; TH.Save.commit();
     G.pause(true);
     const s = S().stats;
     const row = (a, b) => `<span>${a}</span><b>${b}</b>`;
@@ -535,6 +538,7 @@
   });
   document.addEventListener('change', (e) => {
     const el = e.target;
+    if (el.dataset && el.dataset.path === 'video.uiScale') { settingChanged('video.uiScale'); return; }      // applied on release, see below
     if (!el.dataset || !el.dataset.path || el.tagName !== 'SELECT') return;
     const cur = getPath(el.dataset.path);
     setPath(el.dataset.path, typeof cur === 'number' ? Number(el.value) : el.value);
@@ -545,6 +549,7 @@
     if (el.type !== 'range' || !el.dataset.path) return;
     setPath(el.dataset.path, Number(el.value));
     el.nextElementSibling.textContent = el.value + el.dataset.unit;
+    if (el.dataset.path === 'video.uiScale') return;      // resizing the page under the pointer mid-drag makes the slider jitter
     settingChanged(el.dataset.path);
   });
   let lastHover = null;
@@ -576,7 +581,8 @@
     const typing = e.target && (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT');
     if (a === 'fullscreen') {
       e.preventDefault();
-      TH.Settings.video.mode = TH.Settings.video.mode === 'fullscreen' ? 'windowed' : 'fullscreen';
+      if (TH.Settings.video.mode === 'fullscreen') TH.Settings.video.mode = UI._windowMode || 'windowed';
+      else { UI._windowMode = TH.Settings.video.mode; TH.Settings.video.mode = 'fullscreen'; }
       settingChanged('video.mode');
       if (currentView() === 'settings') redraw();
     } else if (typing) return;

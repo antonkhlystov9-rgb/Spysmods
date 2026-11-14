@@ -62,11 +62,13 @@
   A('r1', 'A Complete Set', 'Finish a shelf row.', 20, (s) => [s.stats.rows, 1]);
   A('r10', 'Row by Row', 'Finish 10 shelf rows.', 50, (s) => [s.stats.rows, 10]);
   A('r40', 'Shelf Respect', 'Finish 40 shelf rows.', 100, (s) => [s.stats.rows, 40]);
-  A('r96', 'Not a Gap in Sight', 'Finish all 96 shelf rows.', 250, (s) => [s.stats.rows, TH.SERIES.length]);
+  // these two describe the library as it stands now, so a reshuffle cannot add up to them
+  const rowFull = (s, se) => se.books.every((id) => s.shelved[id]);
+  A('r96', 'Not a Gap in Sight', 'Have all 96 shelf rows complete at once.', 250, (s) => [TH.SERIES.filter((se) => rowFull(s, se)).length, TH.SERIES.length]);
   A('k1', 'Case Closed', 'Fill a whole bookcase.', 40, (s) => [s.stats.cases, 1]);
   A('k6', 'Section Head', 'Fill 6 bookcases.', 80, (s) => [s.stats.cases, 6]);
   A('k12', 'Half the Library', 'Fill 12 bookcases.', 120, (s) => [s.stats.cases, 12]);
-  A('k24', 'Head Librarian', 'Fill every bookcase.', 300, (s) => [s.stats.cases, TH.CATS.length]);
+  A('k24', 'Head Librarian', 'Have every bookcase full at once.', 300, (s) => [TH.CATS.filter((c) => c.series.every((se) => rowFull(s, se))).length, TH.CATS.length]);
   TH.WINGS.forEach((w, i) => A('wing' + i, w.name.replace(/^The /, '') + ' Restored', `Shelve every book in ${w.name}.`, 100,
     (s) => { let n = 0; for (const b of TH.BOOKS) if (b.wing === i && s.shelved[b.id]) n++; return [n, w.books]; }));
   A('g1', 'Gilt Edges', 'Shelve a gilded book.', 20, (s) => [s.stats.golds, 1]);

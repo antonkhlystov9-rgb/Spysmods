@@ -20,10 +20,11 @@
     musicG = ac.createGain(); sfxG = ac.createGain(); ambG = ac.createGain();
     musicG.connect(master); sfxG.connect(master); ambG.connect(master);
     // soft echo for the music box
-    echo = ac.createDelay(1); echo.delayTime.value = 0.42;
+    echo = ac.createDelay(1); echo.delayTime.value = BEAT * 0.75;      // lands on the beat grid instead of just ahead of it
     const fb = ac.createGain(); fb.gain.value = 0.3;
     const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800;
-    echo.connect(lp); lp.connect(fb); fb.connect(echo); lp.connect(musicG);
+    const wet = ac.createGain(); wet.gain.value = 0.3;                  // the echo is an echo, not a second full-volume note
+    echo.connect(lp); lp.connect(fb); fb.connect(echo); lp.connect(wet); wet.connect(musicG);
     // noise buffers
     const len = ac.sampleRate * 3;
     noiseBuf = ac.createBuffer(1, len, ac.sampleRate);
@@ -90,7 +91,7 @@
       noise(t, 0.07, 0.2, 'lowpass', 420);
     },
     wrong() { const t = now(); tone(196, t, 0.2, 'sine', 0.22, null, 0.01, 130); tone(147, t + 0.02, 0.22, 'triangle', 0.1, null, 0.01, 98); },
-    step() { noise(now(), 0.08, 0.05, 'lowpass', 240 + Math.random() * 140); },
+    step() { const f = 78 + Math.random() * 18; tone(f, now(), 0.1, 'sine', 0.055, null, 0.006, f * 0.6); },
     bin() { arp([72, 76, 79, 84], 0.07, 0.35, 'triangle', 0.16); },
     level() { arp([60, 64, 67, 72, 76, 79, 84], 0.09, 0.7, 'triangle', 0.16); const t = now() + 0.7; [60, 64, 67, 72].forEach((n) => tone(midi(n), t, 1.6, 'sine', 0.09, null, 0.05)); },
     star(i) { const t = now(); tone(midi(79 + i * 4), t, 0.5, 'triangle', 0.18); tone(midi(91 + i * 4), t + 0.05, 0.4, 'sine', 0.08); },

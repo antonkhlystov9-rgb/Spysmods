@@ -55,7 +55,7 @@
   // ---------- settings ----------
   const SKEY = 'nightshelver.settings.v1';
   TH.DEFAULTS = {
-    audio: { master: 80, music: 55, sfx: 80, ambience: 30, ambType: 'off', muteUnfocused: true, ambFix: 1 },
+    audio: { master: 80, music: 55, sfx: 80, ambience: 30, ambType: 'off', steps: false, muteUnfocused: true, ambFix: 1 },
     video: {
       mode: 'windowed', res: '1600x900', renderScale: 100, quality: 'high', fpsCap: 0, fov: 75,
       showFps: false, uiScale: 100, reduceMotion: false, bob: true, particles: true
@@ -74,7 +74,12 @@
   const savedSettings = store.get(SKEY);
   TH.Settings = merge(clone(TH.DEFAULTS), savedSettings);
   // Earlier versions turned a noisy fireplace ambience on by default; switch it off once for anyone who still has it.
-  if (savedSettings && savedSettings.audio && !savedSettings.audio.ambFix) { TH.Settings.audio.ambType = 'off'; TH.Settings.audio.ambFix = 1; store.set(SKEY, TH.Settings); }
+  if (savedSettings && savedSettings.audio && !savedSettings.audio.ambFix) { if (savedSettings.audio.ambType === 'fire') TH.Settings.audio.ambType = 'off'; TH.Settings.audio.ambFix = 1; store.set(SKEY, TH.Settings); }
+  // An action added in a later version must not land on a key the player already gave to something else.
+  if (savedSettings && savedSettings.controls && savedSettings.controls.keys) {
+    const sk = savedSettings.controls.keys, k = TH.Settings.controls.keys;
+    for (const a of Object.keys(TH.DEFAULTS.controls.keys)) if (!(a in sk) && Object.keys(sk).some((o) => sk[o] === k[a])) k[a] = '';
+  }
   TH.saveSettings = () => store.set(SKEY, TH.Settings);
   TH.resetSettings = (section) => {
     TH.Settings[section] = clone(TH.DEFAULTS[section]);

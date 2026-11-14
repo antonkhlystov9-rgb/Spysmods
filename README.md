@@ -22,7 +22,20 @@ No timer, no fail state.
 
 **Easiest:** open this repo's **Actions** tab on GitHub, click the latest "Build desktop app" run, and download
 `NightShelver-Windows` (an installer and a portable `.exe`) or `NightShelver-Linux` (an AppImage).
-Windows may show a SmartScreen warning because the build is not code-signed — choose "More info → Run anyway".
+The Windows download contains two things: a **zip** (unzip it anywhere and run `The Night Shelver.exe`, nothing is installed) and a **Setup** installer.
+
+### If Windows or your antivirus blocks it
+
+The game is not malware, but it is **not code-signed**, and Windows, browsers, chat apps and antivirus tools treat every unsigned program from an unknown publisher as suspect. Installers and single-file self-extracting programs are flagged most often, which is why the zip is offered first.
+
+- **Easiest way to share with a friend: send them the game as a web page instead of a program.** It runs in any desktop browser with no download and nothing for antivirus to object to (see "Play in a browser" below).
+- SmartScreen ("Windows protected your PC"): choose **More info → Run anyway**.
+- Antivirus quarantine: restore the file and add the game's folder as an exception, or report it to the vendor as a false positive.
+- The real fix is a code-signing certificate, which costs money and is issued to a named person or company. Once you have one, `electron-builder` can sign the build automatically.
+
+### Play in a browser
+
+Everything under `src/` is a static website. Serve that folder from any web host (GitHub Pages works) and share the link.
 
 **From source** (needs [Node.js](https://nodejs.org) 20+):
 

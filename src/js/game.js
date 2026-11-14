@@ -31,11 +31,12 @@
   const G = TH.Game = { mode: 'menu', paused: false, locked: false, held: [], aim: null, fx: { golden: 0, way: 0 }, streak: 0, keys: {} };
   let cv, renderer, scene, camera, handScene, handCam, handGroup;
   let fireLight = null, woodFine = null, woodFast = null;
-  const fineSwap = [], sways = [];
+  const fineSwap = [], sways = [], roomGroups = [];
   let cover, pages, handCover, handPages, hemi, sun, winMat, lampMat, dust, sparks, hlBook, hlRow, ghost;
   const lamps = [], halos = [], flames = [], spinners = [], clockHands = {}, books = [], piles = [], cases = [], colliders = [], gates = [], marks = [], anims = [], handMeshes = [], beacons = [];
   const P = { x: 1.05, z: 0, yaw: -Math.PI / 2, pitch: 0 };
   let dirty = false, clock = 0, last = 0, lastDraw = 0, fpsT = 0, fpsN = 0, bob = 0, stepPhase = 0, pending = 0;
+  let lockFails = 0, epoch = 0;
   let mouseDown = false, repeatT = 0, lastOk = false, aimKey = '', aaOn = null, saveT = 0, lastWing = -1;
   const stick = { x: 0, y: 0 }, touches = {};
 
@@ -141,6 +142,7 @@
   // Boxes are scaled, not modelled, so texture coordinates are worked out in the shader from each box's real size:
   // the pattern keeps its scale on every piece, and (for wood) runs along the longer side of each face.
   function boxMapped(mat, along, across, longways) {
+    mat.customProgramCacheKey = () => 'box|' + along + '|' + across + '|' + longways;      // otherwise three reuses one compiled shader for all of these
     mat.onBeforeCompile = (sh) => {
       sh.vertexShader = sh.vertexShader.replace('#include <uv_vertex>', `#include <uv_vertex>
         vec3 bsc = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
@@ -382,7 +384,8 @@
     // round and tapered shapes that the box mesh cannot do
     const mats = {};
     const lam = (c) => mats[c] || (mats[c] = new T.MeshLambertMaterial({ color: c }));
-    const add = (geo, mat, x, y, z) => { const m = new T.Mesh(geo, mat); m.position.set(x, y, z); scene.add(m); return m; };
+    let room = scene;                               // while a room is being built, its loose objects go in that room's group
+    const add = (geo, mat, x, y, z) => { const m = new T.Mesh(geo, mat); m.position.set(x, y, z); room.add(m); return m; };
     const cyl = (x, y, z, r0, r1, h, c, seg) => add(new T.CylinderGeometry(r0, r1, h, seg || 14), lam(c), x, y, z);
     const ball = (x, y, z, r, c) => add(new T.SphereGeometry(r, 14, 10), lam(c), x, y, z);
     // A surface with relief has a costly "fine" material and a plain "fast" one for the Low quality setting.
@@ -415,13 +418,13 @@
         m.position.set(Math.cos(a) * rad, yy, Math.sin(a) * rad); m.scale.setScalar(r * (inner ? 0.5 : 0.24 + Math.random() * 0.2)); m.rotation.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
         g.add(m); fineSwap.push({ mesh: m, fine: greens[k], fast: greensFast[k] });
       }
-      scene.add(g); sways.push({ g, p: Math.random() * 6 });
+      room.add(g); sways.push({ g, p: Math.random() * 6 });
     };
     const hang = (x, y, z, top, scale) => {          // a lamp on a cord, with a glow
       solid(x, (y + top) / 2 + 0.05, z, 0.03, top - y - 0.1, 0.03, IRON);
       const bulb = add(bulbGeo, lampMat, x, y, z); bulb.scale.setScalar(scale);
       const halo = new T.Sprite(new T.SpriteMaterial({ map: glowTex, blending: T.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.7 }));
-      halo.scale.setScalar(scale * 0.85); halo.position.set(x, y, z); scene.add(halo); halos.push(halo);
+      halo.scale.setScalar(scale * 0.85); halo.position.set(x, y, z); room.add(halo); halos.push(halo);
     };
     // a window on a long wall; sgn -1 is the north wall, +1 the south wall
     const windowAt = (x, sgn, wd, ht, cy, frame, round) => {
@@ -446,11 +449,13 @@
 
     TH.WINGS.forEach((wg, w) => {
       const x0 = w * RW, pl = PLANS[w], h = pl.h, [wood, woodD, woodL] = pl.wood;
+      room = scene;                                 // floor and ceiling always show: you can see them through the doorways
       // floor and ceiling
       const ftex = floorTexture(pl.floor), shiny = pl.floor === 'tiles' || pl.floor === 'slate';
       const floor = add(new T.PlaneGeometry(RW, RD), null, x0 + RW / 2, 0, 0); floor.rotation.x = -Math.PI / 2;
       relief(floor, new T.MeshStandardMaterial({ map: ftex, bumpMap: ftex, bumpScale: shiny ? 0.03 : 0.02, roughness: shiny ? 0.5 : 0.72, metalness: 0 }), new T.MeshLambertMaterial({ map: ftex }));
       const ceil = add(new T.PlaneGeometry(RW, RD), pl.floor === 'star' ? new T.MeshBasicMaterial({ map: starTexture() }) : new T.MeshLambertMaterial({ color: pl.ceil, map: Object.assign(plaster.clone(), { needsUpdate: true, repeat: new T.Vector2(6, 5) }) }), x0 + RW / 2, h, 0); ceil.rotation.x = Math.PI / 2;
+      room = new T.Group(); scene.add(room); roomGroups[w] = room;
       // long walls with skirting, then this room's windows
       for (const sgn of [-1, 1]) {
         solid(x0 + RW / 2, h / 2, sgn * (HALF + 0.15), RW, h, 0.3, wg.wall);
@@ -461,7 +466,7 @@
       if (w > 0) {
         const hm = Math.max(h, PLANS[w - 1].h), seg = (HALF - DOOR_W / 2), zc = (HALF + DOOR_W / 2) / 2;
         for (const sgn of [-1, 1]) { solid(x0, hm / 2, sgn * zc, 0.3, hm, seg, TH.mix(wg.wall, TH.WINGS[w - 1].wall, 0.5)); wall(x0 - 0.15, x0 + 0.15, sgn * zc - seg / 2, sgn * zc + seg / 2); }
-        solid(x0, (DOOR_H + hm) / 2, 0, 0.3, hm - DOOR_H, DOOR_W, TH.mix(wg.wall, TH.WINGS[w - 1].wall, 0.5));
+        solid(x0, (DOOR_H + 0.1 + hm) / 2, 0, 0.3, hm - DOOR_H - 0.1, DOOR_W, TH.mix(wg.wall, TH.WINGS[w - 1].wall, 0.5));
         solid(x0, DOOR_H + 0.06, 0, 0.36, 0.12, DOOR_W + 0.16, woodD);
         solid(x0, DOOR_H / 2, -DOOR_W / 2 + 0.04, 0.34, DOOR_H, 0.08, woodD); solid(x0, DOOR_H / 2, DOOR_W / 2 - 0.04, 0.34, DOOR_H, 0.08, woodD);
         const grp = new T.Group();
@@ -492,7 +497,7 @@
       wg.cats.forEach((cat, k) => {
         const [lx0, z, s] = pl.cases[k], x = x0 + lx0, rotY = s > 0 ? 0 : Math.PI;
         const at = (lx, ly, lz, sx, sy, sz, col) => solid(x + s * lx, ly, z + s * lz, sx, sy, sz, col);
-        at(0, CH / 2, -CD / 2 + 0.012, IW + 0.08, CH, 0.024, woodD);
+        at(0, CH / 2, -CD / 2 + 0.012, IW + 0.07, CH, 0.024, woodD);
         at(-(IW / 2 + 0.02), CH / 2, 0, 0.04, CH, CD, wood); at(IW / 2 + 0.02, CH / 2, 0, 0.04, CH, CD, wood);
         for (let i = 0; i <= 4; i++) at(0, ROW_Y0 - 0.0175 + i * ROW_DY, 0, IW, 0.035, CD, wood);
         at(0, 0.06, 0.01, IW, 0.12, CD - 0.04, woodD);
@@ -523,7 +528,7 @@
         const g = new T.Group();
         g.add(new T.Mesh(markGeo, new T.MeshBasicMaterial({ color: [0xe2574c, 0x5aa9e6, 0xf0c64a, 0x7fc06a, 0xc084d8][i] })));
         const sp = new T.Sprite(new T.SpriteMaterial({ map: glowTex, blending: T.AdditiveBlending, depthWrite: false, transparent: true })); sp.scale.setScalar(0.55); g.add(sp);
-        g.position.set(x0 + lx, ly, lz); scene.add(g);
+        g.position.set(x0 + lx, ly, lz); room.add(g);
         marks.push({ id: w * 5 + i, wing: w, group: g, y: ly, got: false });
       });
 
@@ -559,7 +564,7 @@
           crown(tx, 0.62 + tall, lz, 0.62, 26);
           block(tx - 0.22, tx + 0.22, lz - 0.22, lz + 0.22);
         };
-        tree(3.6, 3.5, 1.5); tree(6.4, 3.5, 1.8); tree(9.45, 2.6, 1.2);
+        tree(3.6, 3.5, 1.6); tree(6.4, 3.5, 1.85); tree(9.45, 2.6, 1.7);
         pl.cases.forEach(([cx, cz], k) => { if (k % 2) return; cyl(x0 + cx + 0.3, CH + 0.13, cz - 0.02, 0.09, 0.07, 0.14, '#b5653c'); cyl(x0 + cx + 0.3, CH + 0.2, cz - 0.02, 0.1, 0.09, 0.02, '#9c5430'); crown(x0 + cx + 0.3, CH + 0.32, cz - 0.02, 0.2, 9); });
         const board = specimenTexture();
         for (const lx of [1.8, 5, 8.2]) { const fr = add(new T.PlaneGeometry(1.5, 0.9), new T.MeshLambertMaterial({ map: board }), x0 + lx, 3.55, -HALF + 0.03); void fr; solid(x0 + lx, 3.55, -HALF + 0.012, 1.6, 1.0, 0.02, woodD); }
@@ -567,6 +572,7 @@
         // The Scholars' Hall: stone piers, ribbed ceiling, banners, reading desks and a globe
         const SN = '#a8a9b6', SND = '#8a8b99';
         for (const sgn of [-1, 1]) for (const px of [0.25, 3.95, 6.05, 9.75]) {
+          block(x0 + px - 0.25, x0 + px + 0.25, sgn > 0 ? HALF - 0.34 : -HALF, sgn > 0 ? HALF : -HALF + 0.34);
           solid(x0 + px, h / 2, sgn * (HALF - 0.14), 0.36, h, 0.28, SN); solid(x0 + px, 0.14, sgn * (HALF - 0.16), 0.48, 0.28, 0.34, SND); solid(x0 + px, h - 0.14, sgn * (HALF - 0.16), 0.5, 0.28, 0.36, SND);
         }
         for (const bx of [0.25, 3.95, 6.05, 9.75]) solid(x0 + bx, h - 0.11, 0, 0.3, 0.22, RD, SN);
@@ -593,14 +599,14 @@
         const rim = add(new T.TorusGeometry(0.87, 0.07, 8, 40), lam(BR), xe, 2.35, 0); rim.rotation.y = Math.PI / 2;
         for (const [len, wd, kind] of [[0.5, 0.06, 'h'], [0.72, 0.04, 'm']]) {
           const pivot = new T.Group(); pivot.position.set(xe - 0.03, 2.35, 0);
-          const hand = new T.Mesh(new T.BoxGeometry(0.02, len, wd), lam('#2b1c10')); hand.position.y = len / 2 - 0.06; pivot.add(hand); scene.add(pivot); clockHands[kind] = pivot;
+          const hand = new T.Mesh(new T.BoxGeometry(0.02, len, wd), lam('#2b1c10')); hand.position.y = len / 2 - 0.06; pivot.add(hand); room.add(pivot); clockHands[kind] = pivot;
         }
         const gear = (gy, gz, r, c, sp) => {
           const g = new T.Group(), body = new T.Mesh(new T.CylinderGeometry(r, r, 0.06, 24), lam(c)); body.rotation.z = Math.PI / 2; g.add(body);
           const n = Math.round(r * 26);
           for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2, t = new T.Mesh(new T.BoxGeometry(0.06, 0.09, 0.07), lam(c)); t.position.set(0, Math.cos(a) * (r + 0.03), Math.sin(a) * (r + 0.03)); t.rotation.x = a; g.add(t); }
           const hub = new T.Mesh(new T.CylinderGeometry(r * 0.28, r * 0.28, 0.1, 12), lam('#3a2a1c')); hub.rotation.z = Math.PI / 2; g.add(hub);
-          g.position.set(xe - 0.05, gy, gz); scene.add(g); spinners.push({ m: g, ax: 'x', sp });
+          g.position.set(xe - 0.05, gy, gz); room.add(g); spinners.push({ m: g, ax: 'x', sp });
         };
         gear(1.15, -2.2, 0.42, BR, 0.5); gear(1.62, -2.86, 0.26, CU, -0.81); gear(1.25, 2.3, 0.5, CU, -0.35); gear(1.86, 2.9, 0.3, BR, 0.58); gear(3.2, -1.55, 0.3, CU, 0.4); gear(3.15, 1.6, 0.36, BR, -0.33);
         solid(x0 + 4.9, 0.25, -3.6, 0.5, 0.5, 0.5, '#8a6a4a'); solid(x0 + 5.35, 0.2, -3.62, 0.4, 0.4, 0.4, '#7a5c40'); solid(x0 + 4.95, 0.7, -3.62, 0.4, 0.4, 0.4, '#96754f');
@@ -612,6 +618,7 @@
       }
     });
 
+    room = scene;
     // Every wall, shelf and table is an instanced box. Wooden pieces get a grain texture with relief; the rest a faint plaster mottle.
     const col = new T.Color(), boxGeo = new T.BoxGeometry(1, 1, 1);
     const woods = new Set(PLANS.flatMap((p) => p.wood).concat(['#8a6a4a', '#7a5c40', '#96754f']));
@@ -703,15 +710,17 @@
   // ---------- round state ----------
   function newRound() {
     const s = S();
-    s.shelved = TH.BOOKS.map(() => (Math.random() < 0.12 ? 1 : 0));
+    s.shelved = TH.BOOKS.map(() => 0);
+    for (const b of TH.shuffle(TH.BOOKS.slice()).slice(0, 138)) s.shelved[b.id] = 1;      // always 1,014 left to shelve
     for (const se of TH.SERIES) if (se.books.every((id) => s.shelved[id])) s.shelved[se.books[0]] = 0;   // never start with a finished row
-    s.marks = {}; s.gates = {}; s.pos = null; s.started = true; s.charge = {};
+    s.marks = {}; s.gates = {}; s.pos = null; s.started = true; s.charge = {}; s.fx = { golden: 0, way: 0 }; s.streak = 0; s.finaleShown = 0;
     for (const a of TH.ABIL) s.charge[a.id] = Math.floor(a.need * 0.6);
     TH.Save.flush();
   }
   function buildState() {
     const s = S();
-    anims.length = 0; G.held = []; pending = 0; G.streak = 0; G.fx = { golden: 0, way: 0 };
+    epoch++;                                                         // cancels any delayed moves from before
+    anims.length = 0; G.held = []; pending = 0; G.streak = s.streak || 0; G.fx = { golden: (s.fx && s.fx.golden) || 0, way: (s.fx && s.fx.way) || 0 };
     for (const p of piles) p.books = [];
     for (const cs of cases) { cs.done = false; for (const r of cs.rows) { r.slots.fill(-1); r.filled = 0; r.landed = 0; } }
     const loose = TH.WINGS.map(() => []);
@@ -735,7 +744,10 @@
       }
     });
     for (const p of piles) restack(p, true);
-    for (const g of gates) { g.open = !!s.gates[g.idx]; g.group.visible = !g.open; g.col.on = !g.open; }
+    for (const g of gates) {
+      if (TH.shelvedCount(g.idx) / TH.WINGS[g.idx].books >= TH.GATE_AT) s.gates[g.idx] = 1;      // in case the game closed before the door swung
+      g.open = !!s.gates[g.idx]; g.group.visible = !g.open; g.col.on = !g.open;
+    }
     for (const mk of marks) { mk.got = !!s.marks[mk.id]; mk.group.visible = !mk.got; }
     refreshHand();
   }
@@ -744,7 +756,7 @@
   function makeRenderer() {
     const q = TH.Settings.video.quality, aa = q === 'high';
     if (renderer && aa === aaOn) return;
-    if (renderer) { renderer.dispose(); const n = cv.cloneNode(false); cv.replaceWith(n); cv = n; }
+    if (renderer) { renderer.forceContextLoss(); renderer.dispose(); const n = cv.cloneNode(false); cv.replaceWith(n); cv = n; }
     aaOn = aa;
     renderer = new T.WebGLRenderer({ canvas: cv, antialias: aa, powerPreference: 'high-performance' });
     renderer.autoClear = false;
@@ -759,7 +771,7 @@
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', () => { mouseDown = false; });
     document.addEventListener('pointerlockchange', onLock);
-    document.addEventListener('pointerlockerror', () => { G.locked = false; });
+    document.addEventListener('pointerlockerror', () => { G.locked = false; lockFails++; });
     window.addEventListener('resize', G.resize);
     window.addEventListener('blur', () => { G.keys = {}; mouseDown = false; });
     if (!S().started || S().shelved.length !== NB) newRound();
@@ -799,24 +811,34 @@
     buildState();
     const p = s.pos;
     if (p && TH.wingOpen(wingOf(p.x))) { P.x = p.x; P.z = p.z; P.yaw = p.yaw; P.pitch = 0; } else { P.x = 1.05; P.z = 0; P.yaw = -Math.PI / 2; P.pitch = -0.12; }
+    // piles are dealt afresh each time, so the saved spot may now be inside one: step out to the nearest clear floor
+    const stuck = (x, z) => colliders.some((c) => c.on && x > c.x0 - PR && x < c.x1 + PR && z > c.z0 - PR && z < c.z1 + PR);
+    if (stuck(P.x, P.z)) {
+      search: for (let r = 0.1; r < 3; r += 0.1) for (let a = 0; a < 6.28; a += 0.4) {
+        const nx = P.x + Math.cos(a) * r, nz = P.z + Math.sin(a) * r;
+        if (nx > PR && nx < LEN - PR && Math.abs(nz) < HALF - PR && wingOf(nx) === wingOf(P.x) && !stuck(nx, nz)) { P.x = nx; P.z = nz; break search; }
+      }
+    }
     G.mode = 'play'; G.paused = false; aimKey = '';
     TH.UI.hud();
+    if (TH.shelvedCount() === NB && !s.finaleShown) setTimeout(() => { if (G.mode === 'play') TH.UI.finale(); }, 1500);
     TH.UI.tip('move', 'Look around with the mouse and walk with W A S D. Point at a book in a pile and click to pick it up.');
   };
-  G.stop = () => { savePos(); G.mode = 'menu'; G.paused = false; G.aim = null; hideAim(); if (document.pointerLockElement) document.exitPointerLock(); TH.Save.flush(); };
+  G.stop = () => { savePos(); G.mode = 'menu'; G.paused = false; G.aim = null; G.held = []; pending = 0; epoch++; refreshHand(); hideAim(); if (document.pointerLockElement) document.exitPointerLock(); TH.Save.flush(); };
   G.pause = (p) => { G.paused = p; G.keys = {}; mouseDown = false; stick.x = stick.y = 0; if (p) { savePos(); if (document.pointerLockElement) document.exitPointerLock(); } };
   G.reshuffle = () => { S().stats.rounds++; newRound(); TH.checkAch(); };
   G.rebuild = () => { if (!S().started || S().shelved.length !== NB) newRound(); buildState(); };
   G.lock = () => {
     if (G.mode !== 'play' || G.paused || document.pointerLockElement === cv) return;
-    try { const r = cv.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (e) { /* not available: drag-to-look still works */ }
+    try { if (!cv.requestPointerLock) { lockFails = 2; return; } const r = cv.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (e) { lockFails = 2; /* not available: drag-to-look still works */ }
   };
-  function savePos() { if (G.mode === 'play') { S().pos = { x: P.x, z: P.z, yaw: P.yaw }; TH.Save.commit(); } }
+  function savePos() { if (G.mode === 'play') { const s = S(); s.pos = { x: P.x, z: P.z, yaw: P.yaw }; s.fx = { golden: G.fx.golden, way: Math.round(G.fx.way) }; s.streak = G.streak; TH.Save.commit(); } }
 
   // ---------- input ----------
   function onLock() {
     const was = G.locked;
     G.locked = document.pointerLockElement === cv;
+    if (G.locked) lockFails = 0;
     if (was && !G.locked && G.mode === 'play' && !G.paused) TH.UI.autoPause();
     TH.UI.lockHint();
   }
@@ -849,7 +871,8 @@
   function onDown(e) {
     TH.Audio.init();
     if (G.mode !== 'play' || G.paused) return;
-    if (!G.locked) { G.lock(); if (e.button !== 0) return; }
+    // The click that captures the mouse must not also act (it could break a streak). If capture keeps failing, clicks act anyway.
+    if (!G.locked) { G.lock(); if (e.button !== 0 || lockFails < 2) return; }
     if (e.button === 0) { mouseDown = true; repeatT = 0.3; lastOk = G.interact(); }
     else if (e.button === 2 && G.locked) G.grabAll();
   }
@@ -959,10 +982,13 @@
     S().stats.mostHeld = Math.max(S().stats.mostHeld, G.held.length);
     return b;
   }
-  G.interact = () => {
+  // `repeat` is true for hold-to-repeat: it may only do something valid, never complain or cost a streak.
+  G.interact = (repeat) => {
     const a = G.aim;
     if (G.mode !== 'play' || G.paused || !a) return false;
     if (a.type === 'pile') {
+      if (a.pile.books[a.idx] !== a.book.id) return false;           // the aim is from an earlier frame
+      if (repeat && G.held.length + pending >= cap()) return false;
       if (G.held.length + pending >= cap()) { TH.Audio.play('deny'); TH.UI.flash('Your hands are full — shelve some first'); return false; }
       takeFromPile(a.pile, a.idx);
       TH.Audio.play('pick'); refreshHand(); TH.checkAch(); TH.UI.hud(); aimKey = '';
@@ -970,15 +996,17 @@
       return true;
     }
     if (a.type === 'row') {
-      if (a.cand >= 0) { shelve(books[a.cand], true); return true; }
+      if (a.cand >= 0) { if (!G.held.includes(a.cand)) return false; shelve(books[a.cand], true); return true; }
+      if (repeat) return false;
       if (!G.held.length) { TH.UI.flash('Pick up some books first'); return false; }
       if (a.fits.length) { TH.Audio.play('deny'); return false; }           // exact mode: right shelf, wrong gap
       G.streak = 0; S().stats.mistakes++; TH.Audio.play('wrong');
       TH.UI.flash('None of those belong on this shelf'); TH.checkAch(); TH.UI.hud();
       return false;
     }
+    if (repeat) return false;
     if (a.type === 'mark') {
-      const mk = a.mark; mk.got = true; mk.group.visible = false;
+      const mk = a.mark; if (mk.got) return false; mk.got = true; mk.group.visible = false;
       S().marks[mk.id] = 1; S().stats.marks++; TH.Save.earn(25);
       TH.Audio.play('gold'); burst(mk.group.position, 22);
       TH.UI.flash('Lost bookmark found! +25 coins', 'good'); TH.checkAch(); TH.UI.hud(); aimKey = '';
@@ -1006,6 +1034,7 @@
     TH.Audio.play('pick'); refreshHand(); TH.checkAch(); TH.UI.hud(); aimKey = '';
   };
   function shelve(b, manual, delay) {
+    if (b.st !== 'held') return;                                       // already on its way (two inputs in one frame)
     const s = S(), row = cases[b.def.cat].rows[b.se.row];
     const i = G.held.indexOf(b.id); if (i >= 0) G.held.splice(i, 1);
     b.st = 'fly'; b.vis = true; handWorld(b.pos); pileQuat(b, b.quat).premultiply(_q.setFromAxisAngle(Y_AXIS, P.yaw));
@@ -1017,32 +1046,39 @@
     if (G.fx.golden > 0) { gain *= 2; G.fx.golden--; }
     if (b.def.gold) { gain += 15; s.stats.golds++; s.goldFound[b.id] = 1; }
     TH.Save.earn(gain);
+    const ev = {};
+    if (row.filled === NV) {
+      const cs = row.cs, full = (c) => c.rows.every((r) => r.filled === NV);
+      ev.row = true; s.stats.rows++; TH.Save.earn(15);
+      ev.knack = TH.ABIL.find((a) => a.unlock === s.stats.rows);
+      if (full(cs)) { ev.cs = true; s.stats.cases++; TH.Save.earn(60); if (cases.every((c) => c.wing !== cs.wing || full(c))) { ev.wing = true; s.stats.wings++; TH.Save.earn(250); } }
+    }
     if (manual) for (const a of TH.ABIL) { if (!TH.abilUnlocked(a) || s.charge[a.id] >= a.need) continue; if (++s.charge[a.id] >= a.need) TH.Audio.play('ready'); }
     const to = slotPos(b, new T.Vector3()), streak = G.streak;
     const dur = clamp(b.pos.distanceTo(to) / 7, 0.3, 1.1);
-    const go = () => fly(b, to, row.cs.quat.clone(), dur, 0.22, () => land(b, row, gain, streak));
-    if (delay) { b.vis = false; write(b); setTimeout(() => { if (b.st === 'fly') { b.vis = true; handWorld(b.pos); go(); } }, delay * 1000); } else go();
+    const go = () => fly(b, to, row.cs.quat.clone(), dur, 0.22, () => land(b, row, gain, streak, ev)), ep = epoch;
+    if (delay) { b.vis = false; write(b); setTimeout(() => { if (b.st === 'fly' && ep === epoch) { b.vis = true; handWorld(b.pos); go(); } }, delay * 1000); } else go();
     refreshHand(); TH.UI.hud(); aimKey = '';
     if (G.streak === 10 || G.streak === 25 || G.streak === 50 || G.streak === 100) TH.UI.flash(`Streak ×${G.streak}!`, 'good');
   }
-  function land(b, row, gain, streak) {
+  function land(b, row, gain, streak, ev) {
     const s = S();
     b.st = 'shelf'; row.landed++;
     TH.Audio.play('place', streak);
     burst(b.pos, b.def.gold ? 16 : 5);
     if (b.def.gold) { TH.Audio.play('gold'); TH.UI.flash(`Gilded book! +${gain} coins`, 'good'); TH.UI.tip('gold', 'Gilded books are rare and pay a big bonus when shelved.'); }
     if (s.stats.placed === 1) TH.UI.tip('streak', 'Keep shelving without trying a wrong shelf to build a streak — a longer streak pays more per book.');
-    if (row.landed === NV) {
-      s.stats.rows++; TH.Save.earn(15); TH.Audio.play('bin');
+    if (ev.row) {
+      TH.Audio.play('bin');
       for (let v = 0; v < NV; v++) burst(slotPos(books[row.slots[v]], _v), 4);
       const cs = row.cs;
-      if (cs.rows.every((r) => r.landed === NV) && !cs.done) {
-        cs.done = true; s.stats.cases++; TH.Save.earn(60);
+      if (ev.cs) {
+        cs.done = true;
         TH.UI.banner(cs.cat.name + ' is complete!', 'A whole bookcase in order · +75 coins');
         TH.Audio.play('level'); burst(_v.set(cs.x, CH + 0.3, cs.z), 40);
-        if (cases.every((c) => c.wing !== cs.wing || c.done)) { s.stats.wings++; TH.Save.earn(250); setTimeout(() => TH.UI.banner(TH.WINGS[cs.wing].name + ' restored!', 'Every book back where it belongs · +250 coins'), 2600); }
+        if (ev.wing) { setTimeout(() => TH.UI.banner(TH.WINGS[cs.wing].name + ' restored!', 'Every book back where it belongs · +250 coins'), 2600); }
       } else TH.UI.banner('Row complete', row.se.name + ' · +15 coins');
-      const newly = TH.ABIL.find((a) => a.unlock === s.stats.rows);
+      const newly = ev.knack;
       if (newly) setTimeout(() => { TH.UI.banner('New knack: ' + newly.name, newly.desc(newly.vals[0])); TH.Audio.play('ach'); TH.UI.hudBuild(); TH.UI.hud(); }, 2700);
     }
     for (const g of gates) {
@@ -1052,7 +1088,7 @@
       setTimeout(() => TH.UI.banner('A door unlocks', TH.WINGS[g.idx + 1].name + ' is open'), 400);
     }
     TH.Save.commit(); TH.checkAch(); TH.UI.hud(); aimKey = '';
-    if (TH.shelvedCount() === NB && !books.some((x) => x.st === 'fly')) setTimeout(() => TH.UI.finale(), 3200);
+    if (TH.shelvedCount() === NB && !books.some((x) => x.st === 'fly')) setTimeout(() => { if (G.mode === 'play') TH.UI.finale(); }, 3200);
   }
 
   G.useAbility = (i) => {
@@ -1070,11 +1106,12 @@
         for (let k = p.books.length - 1; k >= 0 && got.length < Math.min(v, room); k--) if (books[p.books[k]].def.cat === cat) { const b = books[p.books[k]]; p.books.splice(k, 1); got.push([b, p]); }
       }
       if (!got.length) { TH.Audio.play('deny'); TH.UI.flash('No loose ' + aim.cs.cat.name + ' books left in this room'); return; }
+      const touched = new Set(), ep = epoch;
       got.forEach(([b, p], k) => {
-        b.pile = null; b.st = 'fly'; pending++;
-        setTimeout(() => fly(b, handWorld(new T.Vector3()), b.quat.clone(), 0.45, 0.35, () => { pending--; b.st = 'held'; b.vis = false; write(b); G.held.push(b.id); s.stats.mostHeld = Math.max(s.stats.mostHeld, G.held.length); refreshHand(); TH.UI.hud(); aimKey = ''; TH.Audio.play('pick'); }), k * 70);
-        restack(p, false); if (!p.books.length) s.stats.piles++;
+        b.pile = null; b.st = 'fly'; pending++; touched.add(p);
+        setTimeout(() => ep === epoch && fly(b, handWorld(new T.Vector3()), b.quat.clone(), 0.45, 0.35, () => { pending--; b.st = 'held'; b.vis = false; write(b); G.held.push(b.id); s.stats.mostHeld = Math.max(s.stats.mostHeld, G.held.length); refreshHand(); TH.UI.hud(); aimKey = ''; TH.Audio.play('pick'); }), k * 70);
       });
+      for (const p of touched) { restack(p, false); if (!p.books.length) s.stats.piles++; }
       s.stats.gatherBest = Math.max(s.stats.gatherBest, got.length);
     } else if (a.id === 'tidy') {
       const list = G.held.slice(0, v);
@@ -1155,7 +1192,7 @@
     const moved = Math.hypot(P.x - ox, P.z - oz);
     S().stats.metres += moved;
     bob += moved * 3.4; stepPhase += moved;
-    if (stepPhase > 0.72) { stepPhase = 0; TH.Audio.play('step'); }
+    if (stepPhase > 1.3) { stepPhase = 0; if (TH.Settings.audio.steps) TH.Audio.play('step'); }
   }
   function update(dt) {
     clock += dt;
@@ -1171,7 +1208,7 @@
       camera.updateMatrixWorld();
       G.aim = pick(); showAim();
       if (G.wing() !== lastWing) { lastWing = G.wing(); TH.UI.hud(); }
-      if (mouseDown && TH.Settings.controls.hold && lastOk) { repeatT -= dt; if (repeatT <= 0) { repeatT = 0.16; lastOk = G.interact(); } }
+      if (mouseDown && TH.Settings.controls.hold && lastOk) { repeatT -= dt; if (repeatT <= 0) { repeatT = 0.16; lastOk = G.interact(true); } }
       if (G.fx.way > 0) { G.fx.way = Math.max(0, G.fx.way - dt); if (Math.floor(G.fx.way) !== Math.floor(G.fx.way + dt)) TH.UI.hud(); }
       saveT += dt; if (saveT > 8) { saveT = 0; savePos(); }
     }
@@ -1179,10 +1216,12 @@
       const a = anims[i]; a.t += dt;
       const p = Math.min(1, a.t / a.d), e = 1 - Math.pow(1 - p, 3);
       a.b.pos.lerpVectors(a.p0, a.p1, e); a.b.pos.y += a.arc * Math.sin(Math.PI * p);
-      T.Quaternion.slerp(a.q0, a.q1, a.b.quat, e);
+      a.b.quat.slerpQuaternions(a.q0, a.q1, e);
       write(a.b);
       if (p >= 1) { anims.splice(i, 1); if (a.done) a.done(); }
     }
+    // A room's dressing is drawn when you are in it or next to it; further rooms only when you are lined up with the doorways.
+    { const cw = wingOf(camera.position.x), az = Math.abs(camera.position.z); roomGroups.forEach((g, w) => { const d = Math.abs(w - cw); g.visible = d <= 1 || (az < (d === 2 ? 2.6 : 1.6) && gates.every((gt) => gt.open || gt.idx < Math.min(w, cw) || gt.idx >= Math.max(w, cw))); }); }
     for (const f of flames) { const k = calm() ? 1 : 0.8 + 0.3 * Math.sin(clock * 9 + f.p) + 0.12 * Math.sin(clock * 23 + f.p * 2); f.m.scale.set(1, k, 1); f.m.position.y = f.y + f.h * k / 2; }
     if (fireLight) fireLight.intensity = (TH.Settings.video.quality === 'low' ? 0 : 0.85) * (calm() ? 1 : 0.85 + 0.2 * Math.sin(clock * 11) + 0.1 * Math.sin(clock * 27));
     if (!calm()) for (const sp of spinners) sp.m.rotation[sp.ax] += sp.sp * dt;

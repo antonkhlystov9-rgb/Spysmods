@@ -75,6 +75,10 @@ const { chromium } = require('playwright');
   await frames(); await ev(() => TH.Game.grabAll()); await frames();
   assert(await ev(() => { const h = TH.Game.held; return h.length >= 1 && new Set(h.map((id) => TH.BOOKS[id].cat)).size === 1; }), 'grab-all takes one section only');
   await shot('04-carrying');
+  // holding the button down must never auto-click a wrong shelf
+  const rep = await ev(() => { const G = TH.Game, D = G.debug, cat = TH.BOOKS[G.held[0]].cat, cs = D.cases.find((c) => c.wing === 0 && c.id !== cat), r = cs.rows[1]; D.stand(cs.x, cs.z + cs.s * 1.6); D.lookAt(cs.x, r.y + 0.2, cs.z); return TH.Save.data.stats.mistakes; });
+  await frames();
+  assert(await ev((m) => TH.Game.interact(true) === false && TH.Save.data.stats.mistakes === m, rep), 'hold-to-repeat never counts a wrong shelf');
 
   // lost bookmark
   await ev(() => { const D = TH.Game.debug, m = D.marks[2].group.position; D.stand(m.x + 0.9, m.z - 0.9); D.lookAt(m.x, m.y, m.z); });
