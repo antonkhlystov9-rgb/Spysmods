@@ -35,7 +35,9 @@ The game is not malware, but it is **not code-signed**, and Windows, browsers, c
 
 ### Play in a browser
 
-Everything under `src/` is a static website. Serve that folder from any web host (GitHub Pages works) and share the link.
+Everything under `src/` is a static website, and this repo publishes it automatically with GitHub Pages (`.github/workflows/pages.yml`).
+
+One-time setup: in the repository on GitHub, open **Settings → Pages** and set **Source** to **GitHub Actions**. After the next push (or a manual run of the "Publish web version" workflow) the game is live at `https://<your-username>.github.io/<repo-name>/`. Progress is saved in each player's own browser.
 
 **From source** (needs [Node.js](https://nodejs.org) 20+):
 
