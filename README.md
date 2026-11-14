@@ -6,9 +6,9 @@ No timer, no fail state.
 
 ## What's in it
 
-- **1,152 books** in 96 series across 24 sections and 4 rooms. Every book has its own slot on a shelf.
+- **1,728 books** in 144 series across 36 sections and 6 rooms, each room with its own look: the Reading Room, the Naturalist’s Gallery, the Scholars’ Hall, the Curiosity Vault, the Makers’ Attic and the Travellers’ Cellar. Every book has its own slot on a shelf.
 - **Three layers of sorting**: find the section's bookcase, find the series' shelf, and the book slides in by volume number. An optional *Exact shelving* mode makes you point at the right gap yourself.
-- **Every book can be opened and read.** Each of the 96 series is one story, almanac or collection told across its 12 volumes, one page per book: about 167,000 words in all. Point at a book and press `R`.
+- **Every book can be opened and read.** Each of the 144 series is one story, almanac or collection told across its 12 volumes, one page per book: about 167,000 words in all. Point at a book and press `R`.
 - **4 knacks** (abilities), each with 3 levels: Call the Strays, Tidy Hands, Golden Hour, Wayfinder. They unlock as you finish shelf rows.
 - **Gear** to buy: carry more books, walk faster, reach further. Plus four lighting **moods**.
 - **47 achievements**, a **Card Catalogue** that tracks every single book, rare **gilded books**, and 20 hidden **bookmarks**.
@@ -76,7 +76,7 @@ main.js, preload.js   Electron window and the bridge used by the video settings
 src/index.html        the page
 src/css/style.css     interface styling
 src/js/core.js        helpers, settings, save data
-src/js/data.js        rooms, sections, series and the 1,152 books
+src/js/data.js        rooms, sections, series and the 1,728 books
 src/js/stories.js     the text of every book (generated; do not edit)
 content/stories/      the book text, one JSON file per section (edit these)
 content/BRIEF.md      the writing brief the book text follows

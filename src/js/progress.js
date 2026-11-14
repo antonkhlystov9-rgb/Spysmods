@@ -55,6 +55,7 @@
   A('p300', 'Spine Tingling', 'Shelve 300 books.', 50, (s) => [s.stats.placed, 300]);
   A('p600', 'Well Read', 'Shelve 600 books.', 100, (s) => [s.stats.placed, 600]);
   A('p1000', 'Every Last Volume', 'Shelve 1,000 books.', 250, (s) => [s.stats.placed, 1000]);
+  A('p1500', 'The Long Shift', 'Shelve 1,500 books.', 300, (s) => [s.stats.placed, 1500]);
   A('c10', 'On a Roll', 'Reach a streak of 10.', 20, (s) => [s.stats.bestStreak, 10]);
   A('c25', 'In the Zone', 'Reach a streak of 25.', 40, (s) => [s.stats.bestStreak, 25]);
   A('c50', 'Flow State', 'Reach a streak of 50.', 80, (s) => [s.stats.bestStreak, 50]);
@@ -64,10 +65,10 @@
   A('r40', 'Shelf Respect', 'Finish 40 shelf rows.', 100, (s) => [s.stats.rows, 40]);
   // these two describe the library as it stands now, so a reshuffle cannot add up to them
   const rowFull = (s, se) => se.books.every((id) => s.shelved[id]);
-  A('r96', 'Not a Gap in Sight', 'Have all 96 shelf rows complete at once.', 250, (s) => [TH.SERIES.filter((se) => rowFull(s, se)).length, TH.SERIES.length]);
+  A('r96', 'Not a Gap in Sight', `Have all ${TH.SERIES.length} shelf rows complete at once.`, 250, (s) => [TH.SERIES.filter((se) => rowFull(s, se)).length, TH.SERIES.length]);
   A('k1', 'Case Closed', 'Fill a whole bookcase.', 40, (s) => [s.stats.cases, 1]);
   A('k6', 'Section Head', 'Fill 6 bookcases.', 80, (s) => [s.stats.cases, 6]);
-  A('k12', 'Half the Library', 'Fill 12 bookcases.', 120, (s) => [s.stats.cases, 12]);
+  A('k12', 'Half the Library', `Fill ${TH.CATS.length / 2} bookcases.`, 120, (s) => [s.stats.cases, TH.CATS.length / 2]);
   A('k24', 'Head Librarian', 'Have every bookcase full at once.', 300, (s) => [TH.CATS.filter((c) => c.series.every((se) => rowFull(s, se))).length, TH.CATS.length]);
   TH.WINGS.forEach((w, i) => A('wing' + i, w.name.replace(/^The /, '') + ' Restored', `Shelve every book in ${w.name}.`, 100,
     (s) => { let n = 0; for (const b of TH.BOOKS) if (b.wing === i && s.shelved[b.id]) n++; return [n, w.books]; }));
@@ -82,7 +83,7 @@
   A('series', 'Cover to Cover', 'Read all twelve volumes of one series.', 80, (s) => [Math.max(...TH.SERIES.map((se) => se.books.filter((id) => s.read[id]).length)), 12]);
   A('m1', 'Lost & Found', 'Find a lost bookmark.', 15, (s) => [s.stats.marks, 1]);
   A('m10', 'Page Keeper', 'Find 10 lost bookmarks.', 60, (s) => [s.stats.marks, 10]);
-  A('m20', 'Never Lose Your Place', 'Find all 20 bookmarks in one tidy-up.', 150, (s) => [Object.keys(s.marks).length, 20]);
+  A('m20', 'Never Lose Your Place', `Find all ${TH.WINGS.length * 5} bookmarks in one tidy-up.`, 150, (s) => [Object.keys(s.marks).length, TH.WINGS.length * 5]);
   A('ab1', 'A Little Help', 'Use a knack.', 15, (s) => [s.stats.abilUses, 1]);
   A('ab40', 'Helping Hands', 'Use knacks 40 times.', 80, (s) => [s.stats.abilUses, 40]);
   A('call5', 'Here, Kitty', 'Call 5 or more books at once.', 60, (s) => [s.stats.gatherBest, 5]);

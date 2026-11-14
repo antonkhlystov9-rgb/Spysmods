@@ -3,7 +3,7 @@
 You are writing the readable contents of books for **The Night Shelver**, a cozy first-person
 library-organizing game. The player can open any book and read one page.
 
-The library has 24 sections. Each section has 4 series. Each series has 12 volumes (I to XII).
+The library has 36 sections. Each section has 4 series. Each series has 12 volumes (I to XII).
 You are assigned some sections. For each one, write one JSON file.
 
 ## What each series must be
@@ -40,6 +40,18 @@ Suggested shape per section (use judgment; the series title wins):
 | Alchemy | a hopeful, mostly unsuccessful alchemist's notes; whimsical, never a usable procedure |
 | Folklore | collected tales with the collector as a thread |
 | Dreams | a dream journal or almanac that still resolves by XII |
+| Carpentry | a village joiner or boatbuilder's workshop notes with one human thread; never a usable set of instructions |
+| Needlework | a mender, quilter or knitter through a year; the people whose things are mended are the story |
+| Pottery | a potter's diary or a collector's survey: clay, kiln mishaps, one thread |
+| Bookbinding | a binder's bench: an apprentice learning, or the worn books that come in and who brings them |
+| Painting | a painter's sketchbook journal; describe each picture in words |
+| Toymaking | a toymaker's shop: each toy and who it is for |
+| Railways | the small Emberwick branch line, gently comic |
+| Mountains | walkers and shepherds in the Northern Fells; weather and tiredness, no real peril |
+| Inns | an innkeeper's book or a traveller's guide to inns; dishes are sketches, not full recipes |
+| Letters | epistolary: twelve letters, postcards or notes that tell one story |
+| Festivals | the town's fairs and feast days; committee comedy |
+| Hauntings | gentle ghost stories for young readers: awkward, lonely or helpful ghosts, never frightening |
 
 ## The world
 

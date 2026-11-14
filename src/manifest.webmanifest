@@ -1,7 +1,7 @@
 {
   "name": "The Night Shelver",
   "short_name": "Night Shelver",
-  "description": "A cozy first-person library organizing game. Shelve 1,152 books and read every one.",
+  "description": "A cozy first-person library organizing game. Shelve 1,728 books and read every one.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -1,4 +1,5 @@
-// The Night Shelver — the library's catalogue: 4 wings, 24 sections, 96 series, 1,152 books
+// The Night Shelver — the library's catalogue: 6 rooms, 36 sections, 144 series, 1,728 books.
+// New rooms and sections go at the END of their lists: a book's number is its place in this order, and saves rely on it.
 (function () {
   'use strict';
   const TH = window.TH;
@@ -9,7 +10,9 @@
     { id: 'reading', name: 'The Reading Room', wall: '#b9936a', rug: '#8f3f35', blurb: 'Where the town comes to read. Or used to.' },
     { id: 'nature', name: 'The Naturalist’s Gallery', wall: '#8fa07a', rug: '#3f6b52', blurb: 'Pressed flowers between every other page.' },
     { id: 'scholar', name: 'The Scholars’ Hall', wall: '#8b93b0', rug: '#34466e', blurb: 'Quiet enough to hear a footnote drop.' },
-    { id: 'vault', name: 'The Curiosity Vault', wall: '#a58aa8', rug: '#5e3c66', blurb: 'The books nobody knew where else to put.' }
+    { id: 'vault', name: 'The Curiosity Vault', wall: '#a58aa8', rug: '#5e3c66', blurb: 'The books nobody knew where else to put.' },
+    { id: 'attic', name: 'The Makers’ Attic', wall: '#cdb083', rug: '#b5652f', blurb: 'Sawdust, wool and wet paint, all the way up the stairs.' },
+    { id: 'cellar', name: 'The Travellers’ Cellar', wall: '#8f8a80', rug: '#7a3b2e', blurb: 'Cool stone, old trunks and tales from the road.' }
   ];
 
   // section name | four series
@@ -40,7 +43,21 @@
     ['Theatre', 'Plays for Small Stages|The Prompter’s Diary|Masks & Costumes|Comedies in One Act'],
     ['Alchemy', 'The Patient Crucible|Salts & Spirits|Notes Toward Gold|The Distiller’s Art'],
     ['Folklore', 'Hearth Tales|The Green Children|Customs of the Harvest|Things Seen at Dusk'],
-    ['Dreams', 'The Dream Ledger|Sleepwalker’s Almanac|Night Visions Interpreted|Letters to Tomorrow']
+    ['Dreams', 'The Dream Ledger|Sleepwalker’s Almanac|Night Visions Interpreted|Letters to Tomorrow'],
+
+    ['Carpentry', 'The Joiner’s Bench|Chairs & Their Troubles|A Year of Small Boxes|The Boatshed Notes'],
+    ['Needlework', 'The Mending Basket|Samplers & Stitches|A Quilt for Every Bed|Knots, Wool & Weather'],
+    ['Pottery', 'The Stubborn Wheel|Glazes & Accidents|Jugs of the Lowlands|The Kiln Diary'],
+    ['Bookbinding', 'The Binder’s Apprentice|Paper, Paste & Patience|Marbled Endpapers|Repairs to Old Friends'],
+    ['Painting', 'Sketches from the Fells|The Watercolour Year|Portraits of Emberwick|A Box of Twelve Colours'],
+    ['Toymaking', 'The Toymaker’s Ledger|Kites & Whirligigs|The Dollhouse Papers|Puppets on a Shoestring'],
+
+    ['Railways', 'The Branch Line Gazette|Timetables & Tea|Signals in the Fog|The Last Train to Grey Coast'],
+    ['Mountains', 'Over the High Pass|The Shepherd’s Hut Book|Cairns & Summits|A Winter Above the Tarn'],
+    ['Inns', 'The Lamplit Goose|Landlords & Lodgers|A Guide to Good Suppers|Rooms at the Crossroads'],
+    ['Letters', 'The Postmistress Writes|Letters Never Sent|Parcels Gone Astray|Postcards from the Coast'],
+    ['Festivals', 'The Fair Comes to Town|Bonfire Night Annals|The Lantern Parade|Prizes at the Flower Show'],
+    ['Hauntings', 'The Polite Ghost|Cold Spots Catalogued|Night Watch at the Old Hall|Things That Go Bump, Gently']
   ];
 
   TH.CATS = []; TH.SERIES = []; TH.BOOKS = [];

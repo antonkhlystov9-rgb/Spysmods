@@ -26,17 +26,17 @@ const { chromium } = require('playwright');
   await wait(900);
   const info = await ev(() => ({ books: TH.BOOKS.length, series: TH.SERIES.length, cats: TH.CATS.length, titles: new Set(TH.BOOKS.map(TH.bookTitle)).size, names: new Set(TH.SERIES.map((s) => s.name)).size, ach: TH.ACH.length, pre: TH.shelvedCount() }));
   console.log(info);
-  assert(info.books === 1152 && info.titles === 1152, '1,152 books with unique titles');
-  assert(info.series === 96 && info.names === 96 && info.cats === 24, '96 series in 24 sections');
+  assert(info.books === 1728 && info.titles === 1728, '1,728 books with unique titles');
+  assert(info.series === 144 && info.names === 144 && info.cats === 36, '144 series in 36 sections');
   assert(info.pre === 0, 'a new library starts with nothing on the shelves');
   const lay = await ev(() => { const D = TH.Game.debug; let floor = 0, high = 0, apart = 0; const per = D.loose.map((l) => l.length);
     for (const l of D.loose) for (const b of l) { if (b.base < 0.1) floor++; if (b.top > 0.4) high++; if (!l.some((o) => o !== b && Math.hypot(o.lx - b.lx, o.lz - b.lz) < 0.27)) apart++; }
     return { per, floor, high, apart }; });
   console.log(lay);
-  assert(lay.per.every((n) => n === 288) && lay.floor === 1152, 'all 1,152 books start on the floor, 288 in each room');
-  assert(lay.high === 0 && lay.apart > 700, 'they are scattered, not stacked (' + lay.apart + ' lie on their own, tallest heap under 40 cm)');
+  assert(lay.per.length === 6 && lay.per.every((n) => n === 288) && lay.floor === 1728, 'all 1,728 books start on the floor, 288 in each of the six rooms');
+  assert(lay.high === 0 && lay.apart > 1050, 'they are scattered, not stacked (' + lay.apart + ' lie on their own, tallest heap under 40 cm)');
   const st = await ev(() => { let n = 0, short = 0, words = 0; (TH.STORIES || []).forEach((se) => (se || []).forEach((v) => { n++; const w = v[1].trim().split(/\s+/).length; words += w; if (w < 50 || !v[0]) short++; })); return { n, short, words }; });
-  assert(st.n === 1152 && st.short === 0, 'every one of the 1,152 books has a page to read (' + st.n + ' pages, ' + st.words + ' words)');
+  assert(st.n === 1728 && st.short === 0, 'every one of the 1,728 books has a page to read (' + st.n + ' pages, ' + st.words + ' words)');
   await shot('01-title');
 
   await page.click('[data-act="enter"]'); await wait(700);
@@ -213,18 +213,24 @@ const { chromium } = require('playwright');
   await ev(() => { const D = TH.Game.debug; D.stand(22, 1.2); D.lookAt(28, 1.5, -4); }); await frames(4); await shot('13-morning-mood');
 
   // --- finish the library ---
-  await fast(2, 288); await fast(3, 288); await page.waitForSelector('#modal .dialog .tally', { timeout: 60000 });
+  for (const w of [2, 3, 4, 5]) { await fast(w, 288); assert(await ev((k) => k === 5 || TH.wingOpen(k + 1), w), 'room ' + (w + 1) + ' done, the next door is open'); }
+  await page.waitForSelector('#modal .dialog .tally', { timeout: 60000 });
   await shot('14-finale');
-  assert(await ev(() => TH.shelvedCount() === 1152 && TH.Save.data.stats.cases === 24 && TH.Save.data.stats.rows === 96), 'every book can be shelved (24 bookcases, 96 rows)');
+  assert(await ev(() => TH.shelvedCount() === 1728 && TH.Save.data.stats.cases === 36 && TH.Save.data.stats.rows === 144 && TH.Save.data.stats.wings === 6), 'every book can be shelved (36 bookcases, 144 rows, 6 rooms)');
   assert(await page.locator('#modal .dialog h2').innerText() === 'The library is in order', 'finale appears');
   assert(await ev(() => TH.Game.debug.books.every((b) => b.st === 'shelf' && b.pos.distanceTo(TH.Game.debug.slot(b.id)) < 0.001)), 'all books sit in their own slots');
 
   // --- persistence, reshuffle ---
   await ev(() => TH.Save.flush());
   await page.reload({ timeout: 180000 }); await wait(900);
-  assert(await ev(() => TH.shelvedCount() === 1152 && TH.Save.data.upg.satchel === 1 && TH.Settings.controls.keys.grab === 'KeyG'), 'progress and settings persist after reload');
+  assert(await ev(() => TH.shelvedCount() === 1728 && TH.Save.data.upg.satchel === 1 && TH.Settings.controls.keys.grab === 'KeyG'), 'progress and settings persist after reload');
   await page.click('[data-act="go"][data-to="settings"]'); await page.click('[data-act="reshuffle"]'); await page.click('[data-act="yes"]'); await wait(400);
   assert(await ev(() => TH.shelvedCount() === 0 && TH.Game.debug.loose.every((l) => l.length === 288) && TH.Save.data.upg.satchel === 1 && TH.Save.data.stats.rounds === 1), 'reshuffle puts every book back on the floor but keeps upgrades');
+  // --- a save made in the old four-room library keeps everything and simply gains the new rooms ---
+  await ev(() => { const s = TH.Save.data; s.shelved = new Array(1152).fill(1); s.gates = { 0: 1, 1: 1, 2: 1 }; s.finaleShown = 1; s.coins = 4321; TH.Save.flush(); });
+  await page.reload({ timeout: 180000 }); await wait(900);
+  assert(await ev(() => { const D = TH.Game.debug, s = TH.Save.data; return TH.shelvedCount() === 1152 && s.shelved.length === 1728 && s.coins === 4321 && D.loose[4].length === 288 && D.loose[5].length === 288 && D.loose.slice(0, 4).every((l) => l.length === 0) && TH.wingOpen(4) && !TH.wingOpen(5) && !s.finaleShown; }), 'an old four-room save keeps its 1,152 shelved books, gets the new rooms, and the door to them is open');
+  assert(await ev(() => document.querySelector('[data-act="enter"]').textContent.includes('1152 of 1728')), 'the title screen offers to continue it');
   console.log('achievements unlocked:', await ev(() => Object.keys(TH.Save.data.ach).length), '/', info.ach, ' coins earned:', await ev(() => TH.Save.data.stats.earned));
 
   await browser.close();
