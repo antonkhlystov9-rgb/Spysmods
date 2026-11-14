@@ -8,7 +8,7 @@ No timer, no fail state.
 
 - **1,728 books** in 144 series across 36 sections and 6 rooms: the Reading Room, the Naturalist’s Gallery, the Scholars’ Hall, the Curiosity Vault, the Makers’ Attic and the Travellers’ Cellar. Each room is bigger than the last and holds more (3, 4, 5, 6, 8 and 10 bookcases; 144 books in the first room, 480 in the last), each has its own look and layout, and the two biggest have an upper floor reached by stairs. Every book has its own slot on a shelf.
 - **Three layers of sorting**: find the section's bookcase, find the series' shelf, and the book slides in by volume number. An optional *Exact shelving* mode makes you point at the right gap yourself.
-- **Every book can be opened and read.** Each of the 144 series is one story, almanac or collection told across its 12 volumes, one page per book: about 167,000 words in all. Point at a book and press `R`.
+- **Every book can be opened and read.** Each of the 144 series is one story, almanac or collection told across its 12 volumes, one page per book: about 250,000 words in all. Point at a book and press `R`.
 - **4 knacks** (abilities), each with 3 levels: Call the Strays, Tidy Hands, Golden Hour, Wayfinder. They unlock as you finish shelf rows.
 - **Gear** to buy: carry more books, walk faster, reach further. Plus four lighting **moods**.
 - **47 achievements**, a **Card Catalogue** that tracks every single book, rare **gilded books**, and 20 hidden **bookmarks**.
