@@ -262,3 +262,8 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 1.5re
   .rnav { min-width: 0; }
 }
 .page:not(.verse) .text p.lines { text-indent: 0; padding-left: 1.6em; font-style: italic; }
+
+/* a gilded book keeps its series colour and wears a gold edge */
+.hb i.gilt, .vols button.gilt { box-shadow: 0 0 0 .13rem #f7c948; }
+.reader.gilded .spread { box-shadow: var(--shadow), 0 .4rem 0 var(--ink), inset 0 0 0 .22rem #f7c948; }
+.title-foot a { pointer-events: auto; color: var(--cream); }

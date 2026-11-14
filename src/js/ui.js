@@ -37,7 +37,9 @@
 
   // ---------- state ----------
   let screen = 'title', modalKind = '', catWing = 0, shopTab = 'abil', setTab = 'game';
-  let installEvent = null;
+  let installEvent = null, installLate = false;
+  // the hosted website (not the desktop app, not the single-file version)
+  const onWeb = !TH.desktop && /^https?:$/.test(location.protocol) && !!document.querySelector('link[rel="manifest"]');
   let rebinding = null, tipTimer = 0, flashTimer = 0, bannerTimer = 0, lastStreak = 0;
 
   const keyName = (code) => {
@@ -95,7 +97,7 @@
         ${TH.desktop ? '<button class="btn ghost" data-act="quit">Quit</button>' : installEvent ? '<button class="btn ghost" data-act="install">Install as an app</button>' : '<span></span>'}
       </div>
     </div>
-    <div class="title-foot"><span>The Night Shelver v${TH.VERSION}</span><span>${TH.SERIES.filter((se) => TH.seriesCount(se) === TH.VOLS).length}/${TH.SERIES.length} rows complete · <span class="js-coins">${fmt(s.coins)}</span> coins</span></div>`;
+    <div class="title-foot"><span>The Night Shelver v${TH.VERSION}${onWeb ? ' · <a href="The-Night-Shelver.html" download>Download as one file</a>' : ''}</span><span>${TH.SERIES.filter((se) => TH.seriesCount(se) === TH.VOLS).length}/${TH.SERIES.length} rows complete · <span class="js-coins">${fmt(s.coins)}</span> coins</span></div>`;
   }
 
   function vCatalog() {
@@ -106,7 +108,7 @@
       const rows = cat.series.map((se) => {
         const c = TH.seriesCount(se); n += c;
         const cells = se.books.map((id) => (s.shelved[id]
-          ? `<button class="on ${s.read[id] ? 'read' : ''}" data-act="readbook" data-id="${id}" style="background:${TH.BOOKS[id].gold ? '#f0c24e' : se.color}" title="${esc(TH.bookTitle(TH.BOOKS[id]))} — click to read" aria-label="Read ${esc(TH.bookTitle(TH.BOOKS[id]))}"></button>`
+          ? `<button class="on ${s.read[id] ? 'read' : ''} ${TH.BOOKS[id].gold ? 'gilt' : ''}" data-act="readbook" data-id="${id}" style="background:${se.color}" title="${esc(TH.bookTitle(TH.BOOKS[id]))}${TH.BOOKS[id].gold ? ' (gilded)' : ''} — click to read" aria-label="Read ${esc(TH.bookTitle(TH.BOOKS[id]))}"></button>`
           : `<i title="${esc(TH.bookTitle(TH.BOOKS[id]))} — still loose"></i>`)).join('');
         return `<div class="srow ${c === TH.VOLS ? 'full' : ''}"><span>${esc(se.name)}</span><div class="vols">${cells}</div><b>${c}/${TH.VOLS}</b></div>`;
       }).join('');
@@ -184,7 +186,7 @@
     <input type="range" data-path="${path}" data-unit="${unit || '%'}" min="${min}" max="${max}" step="${step}" value="${getPath(path)}" aria-label="${esc(label)}"><span class="val">${getPath(path)}${unit || '%'}</span></div>`;
   const ACTIONS = [
     ['forward', 'Walk forward'], ['back', 'Walk back'], ['left', 'Step left'], ['right', 'Step right'], ['run', 'Run (hold)'],
-    ['interact', 'Pick up / shelve'], ['grab', 'Take all of that section from a pile'], ['read', 'Read a book'],
+    ['interact', 'Pick up / shelve'], ['grab', 'Gather nearby books of a section / take one off a shelf'], ['drop', 'Put a book down'], ['read', 'Read a book'],
     ['ability1', 'Knack 1 — Call the Strays'], ['ability2', 'Knack 2 — Tidy Hands'], ['ability3', 'Knack 3 — Golden Hour'], ['ability4', 'Knack 4 — Wayfinder'],
     ['pause', 'Pause'], ['fullscreen', 'Toggle fullscreen'], ['mute', 'Mute all sound']
   ];
@@ -197,12 +199,15 @@
       rows = rTog('game.names', 'Show what you are looking at', 'Book titles and shelf names appear under the crosshair.')
         + rTog('game.crosshair', 'Crosshair')
         + rTog('game.exact', 'Exact shelving', 'Harder: you must point at the right gap in the row, not just the right row. Pays +1 coin per book.')
-        + rTog('game.tips', 'Tutorial tips', 'Short hints the first time something new shows up.');
-      foot = `<button class="btn small" data-act="resettips">Show all tips again</button>
+        + rTog('game.tips', 'Tutorial tips', 'Short hints the first time something new shows up.')
+        + `<p class="note"><b>Your progress saves by itself</b> after everything you do: shelved books, where every loose book lies, what you carry and where you stand. Each place you play (website, installed app, single file) keeps its own save. To move one across, save it to a file here and load that file there.</p>`;
+      foot = `<button class="btn small" data-act="savefile">Save progress to a file</button>
+        <button class="btn small" data-act="loadfile">Load progress from a file…</button>
+        <button class="btn small" data-act="resettips">Show all tips again</button>
         <button class="btn small" data-act="reshuffle">Reshuffle the library…</button>
         <button class="btn small danger" data-act="wipe">Erase all progress…</button>`;
     } else if (setTab === 'controls') {
-      rows = `<p class="note">Mouse: move to look, left-click to pick up or shelve, right-click a pile to take every book of that section. Esc always frees the mouse and pauses. Click a key below to rebind it.</p>`
+      rows = `<p class="note">Mouse: move to look, left-click to pick up or shelve, right-click a loose book to gather the nearby ones of its section, right-click a shelved book to take it down. Esc always frees the mouse and pauses. Click a key below to rebind it.</p>`
         + rRange('controls.sens', 'Mouse sensitivity', 20, 300, 5)
         + rTog('controls.invertY', 'Invert vertical look')
         + rTog('controls.hold', 'Hold to repeat', 'Keep the mouse button down to keep picking up or shelving.')
@@ -273,7 +278,10 @@
     // a confirmation opens on Cancel, so a stray Enter can never erase anything
     const f = kind === 'confirm' ? m.querySelector('[data-act="no"]') : m.querySelector('.btn.primary, .btn'); if (f) f.focus({ preventScroll: true });
   }
-  function closeModal() { modalKind = ''; const m = $('#modal'); m.classList.add('hidden'); m.innerHTML = ''; }
+  function closeModal() {
+    modalKind = ''; const m = $('#modal'); m.classList.add('hidden'); m.innerHTML = '';
+    if (installLate && screen === 'title') { installLate = false; UI.show('title', true); }     // the install offer arrived while a dialog was open
+  }
   UI.confirm = (title, text, yes, cb) => {
     UI._yes = cb; UI._from = modalKind;
     openModal('confirm', `<div class="panel dialog"><h2>${title}</h2><p>${text}</p>
@@ -282,7 +290,7 @@
   function pauseMenu() {
     G.pause(true);
     const w = TH.WINGS[G.wing()];
-    openModal('pause', `<div class="panel dialog"><h2>Paused</h2><p>${esc(w.name)} · ${TH.shelvedCount()} of ${NB} books shelved. No timer, no rush.</p>
+    openModal('pause', `<div class="panel dialog"><h2>Paused</h2><p>${esc(w.name)} · ${TH.shelvedCount()} of ${NB} books shelved. No timer, no rush. Your progress saves by itself.</p>
       <div class="btns">
         <button class="btn primary" data-act="resume">${ico('play')} Resume</button>
         <button class="btn" data-act="go" data-to="catalog">${ico('book')} Card Catalogue</button>
@@ -302,9 +310,10 @@
     openModal('help', `<div class="panel dialog help"><h2>How to Play</h2>
       <ul>
         <li><b>Walk the library.</b> Look with the mouse, move with <b>${esc(keyName(k.forward))} ${esc(keyName(k.left))} ${esc(keyName(k.back))} ${esc(keyName(k.right))}</b>, hold <b>${esc(keyName(k.run))}</b> to run.</li>
-        <li><b>Pick books up.</b> Point at a book in a pile and click. Its colour tells you its section. Right-click (or <b>${esc(keyName(k.grab))}</b>) takes every book of that section from the pile.</li>
+        <li><b>Pick books up.</b> They are scattered all over the floor: point at one and click. Every book of a series is the same colour. Right-click (or <b>${esc(keyName(k.grab))}</b>) gathers the nearby books of the same section.</li>
+        <li><b>Put books down.</b> Press <b>${esc(keyName(k.drop))}</b> to drop the last book you picked up, on the floor or on a table. Changed your mind about a shelved book? Click it with empty hands (or right-click it) to take it back down.</li>
         <li><b>Shelve them.</b> Each bookcase is one section (its name is on top). Each shelf is one series. Point at the right shelf and click — the book slides into its place in volume order.</li>
-        <li><b>Read anything.</b> Point at any book, in a pile or on a shelf, and press <b>${esc(keyName(k.read))}</b> to open it. Each series is one story told across its twelve volumes, so a finished shelf reads from start to end.</li>
+        <li><b>Read anything.</b> Point at any book, on the floor or on a shelf, and press <b>${esc(keyName(k.read))}</b> to open it. Each series is one story told across its twelve volumes, so a finished shelf reads from start to end.</li>
         <li><b>Keep a streak.</b> Clicking a shelf where nothing you carry belongs breaks your streak. A longer streak pays more coins per book. There is no timer and you can never fail.</li>
         <li><b>Finish rows</b> to unlock knacks (keys <b>${esc(keyName(k.ability1))} ${esc(keyName(k.ability2))} ${esc(keyName(k.ability3))} ${esc(keyName(k.ability4))}</b>). Shelve ${Math.round(TH.GATE_AT * 100)}% of a room to open the door to the next.</li>
         <li><b>Spend coins</b> in the Shop on knack upgrades, a bigger book strap, faster slippers and new lighting moods. Keep an eye out for gilded books and lost bookmarks.</li>
@@ -329,7 +338,7 @@
     };
     modalKind = 'book';
     const m = $('#modal');
-    m.innerHTML = `<div class="reader" style="--cover:${b.gold ? '#c9962c' : se.color}">
+    m.innerHTML = `<div class="reader${b.gold ? ' gilded' : ''}" style="--cover:${se.color}">
       <div class="spread">
         <div class="page left"><small>${esc(cat.name)}</small><h2>${esc(se.name)}</h2><div class="orn"></div>
           <p class="vol">Volume ${TH.ROMAN[b.vol]}</p><h3>${esc(title)}</h3><p class="lib">${b.gold ? 'Gilded edition · ' : ''}Emberwick Library</p></div>
@@ -387,7 +396,7 @@
     if (!G.held.length) { el.innerHTML = `<div class="held-h">Hands empty · room for ${TH.upgVal('satchel')}</div>`; return; }
     el.innerHTML = `<div class="held-h">Carrying ${G.held.length}/${TH.upgVal('satchel')}</div>` + G.held.map((id) => {
       const b = TH.BOOKS[id], se = TH.SERIES[b.series];
-      return `<div class="hb ${fits.includes(id) ? 'fit' : ''}"><i style="background:${b.gold ? '#f0c24e' : se.color}"></i><span><b>${esc(se.name)} ${TH.ROMAN[b.vol]}</b><small>${esc(TH.CATS[b.cat].name)}</small></span></div>`;
+      return `<div class="hb ${fits.includes(id) ? 'fit' : ''}"><i class="${b.gold ? 'gilt' : ''}" style="background:${se.color}"></i><span><b>${esc(se.name)} ${TH.ROMAN[b.vol]}</b><small>${esc(TH.CATS[b.cat].name)}</small></span></div>`;
     }).join('');
   }
   UI.hud = () => {
@@ -502,7 +511,32 @@
     resetsec: (el) => { TH.resetSettings(el.dataset.id); settingChanged(el.dataset.id); redraw(); },
     resettips: () => { S().tips = {}; TH.Save.commit(); UI.toast('info', 'Tips reset', 'Hints will show again.'); },
     testsound: () => { TH.Audio.play('bin'); },
-    reshuffle: () => UI.confirm('Reshuffle the library?', 'Every book goes back into the piles and the doors lock again. You keep your coins, upgrades, knacks and achievements.', 'Reshuffle', () => {
+    drop: () => G.drop(),
+    savefile: () => {
+      G.sync(true);
+      const a = document.createElement('a'), url = URL.createObjectURL(new Blob([JSON.stringify(S())], { type: 'application/json' }));
+      a.href = url; a.download = 'night-shelver-save.json'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      UI.toast('info', 'Progress saved to a file', 'night-shelver-save.json');
+    },
+    loadfile: () => {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
+      inp.onchange = () => {
+        const f = inp.files && inp.files[0]; if (!f) return;
+        const r = new FileReader();
+        r.onload = () => {
+          let d = null; try { d = JSON.parse(r.result); } catch (e) { /* not a save */ }
+          if (!TH.Save.valid(d)) { UI.toast('info', 'That is not a Night Shelver save file'); return; }
+          UI.confirm('Load this save?', `It has ${d.shelved.filter(Boolean).length} of ${NB} books shelved and ${fmt(d.coins)} coins. It replaces the progress on this device.`, 'Load it', () => {
+            closeModal(); if (inGame()) G.stop(); TH.Save.replace(d); G.rebuild(); G.applyVideo(); $('#hud').classList.add('hidden'); UI.show('title');
+            UI.toast('info', 'Progress loaded');
+          });
+        };
+        r.readAsText(f);
+      };
+      inp.click();
+    },
+    reshuffle: () => UI.confirm('Reshuffle the library?', 'Every book goes back onto the floor and the doors lock again. You keep your coins, upgrades, knacks and achievements.', 'Reshuffle', () => {
       const playing = inGame(); G.reshuffle(); closeModal();
       if (playing) enterGame(); else { G.rebuild(); UI.show('title'); }
     }),
@@ -595,6 +629,7 @@
       if (a === 'interact') G.interact();
       else if (a === 'read') G.read();
       else if (a === 'grab') G.grabAll();
+      else if (a === 'drop') G.drop();
       else if (a.startsWith('ability')) G.useAbility(+a.slice(7) - 1);
     }
   });
@@ -622,7 +657,7 @@
 
   // ---------- web version: installable, and playable offline ----------
   // Chrome and Edge offer to install the site as an app; we keep their offer and show our own button for it.
-  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; if (screen === 'title' && !modalKind) UI.show('title', true); });
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; if (screen === 'title' && !modalKind) UI.show('title', true); else installLate = true; });
   window.addEventListener('appinstalled', () => { installEvent = null; if (screen === 'title' && !modalKind) UI.show('title', true); UI.toast('info', 'Installed', 'The Night Shelver is now an app on this computer.'); });
   if (!TH.desktop && 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost') && document.querySelector('link[rel="manifest"]')) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

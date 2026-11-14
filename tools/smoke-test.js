@@ -1,5 +1,5 @@
 // Headless smoke test: boots the game in Chromium, plays it through its real pick/shelve code, and checks for errors.
-// Usage: node tools/smoke-test.js [screenshot-dir]     (needs Playwright)
+// Usage: node tools/smoke-test.js [screenshot-dir]     (needs Playwright; set QUICK=1 to stop after the hands-on part)
 const path = require('path');
 const { chromium } = require('playwright');
 
@@ -7,6 +7,9 @@ const { chromium } = require('playwright');
   const shots = process.argv[2];
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
+  // No mouse capture here: a captured mouse turns every pointer move the test makes into a look, which makes aiming a matter of luck.
+  // Without it the game falls back to drag-to-look, which is what the checks below drive.
+  await page.addInitScript(() => { HTMLCanvasElement.prototype.requestPointerLock = undefined; });
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
@@ -16,7 +19,7 @@ const { chromium } = require('playwright');
   const wait = (ms) => page.waitForTimeout(ms);
   // software rendering is slow, so wait on game state rather than the clock
   const frames = (n = 3) => ev((k) => new Promise((res) => { let i = 0; const f = () => (++i >= k ? res() : requestAnimationFrame(f)); requestAnimationFrame(f); }), n);
-  const landed = async () => { for (let i = 0; i < 400; i++) { if (!(await ev(() => TH.Game.debug.books.some((b) => b.st === 'fly')))) break; await wait(100); } await frames(2); };
+  const landed = async () => { for (let i = 0; i < 400; i++) { if (!(await ev(() => TH.Game.debug.busy() || TH.Game.debug.books.some((b) => b.st === 'fly')))) break; await wait(100); } await frames(2); };
 
   await page.goto('file://' + path.resolve(__dirname, '..', 'src', 'index.html'));
   await wait(900);
@@ -24,7 +27,13 @@ const { chromium } = require('playwright');
   console.log(info);
   assert(info.books === 1152 && info.titles === 1152, '1,152 books with unique titles');
   assert(info.series === 96 && info.names === 96 && info.cats === 24, '96 series in 24 sections');
-  assert(info.pre > 60 && info.pre < 230, 'a new library starts partly shelved (' + info.pre + ')');
+  assert(info.pre === 0, 'a new library starts with nothing on the shelves');
+  const lay = await ev(() => { const D = TH.Game.debug; let floor = 0, high = 0, apart = 0; const per = D.loose.map((l) => l.length);
+    for (const l of D.loose) for (const b of l) { if (b.base < 0.1) floor++; if (b.top > 0.4) high++; if (!l.some((o) => o !== b && Math.hypot(o.lx - b.lx, o.lz - b.lz) < 0.27)) apart++; }
+    return { per, floor, high, apart }; });
+  console.log(lay);
+  assert(lay.per.every((n) => n === 288) && lay.floor === 1152, 'all 1,152 books start on the floor, 288 in each room');
+  assert(lay.high === 0 && lay.apart > 700, 'they are scattered, not stacked (' + lay.apart + ' lie on their own, tallest heap under 40 cm)');
   const st = await ev(() => { let n = 0, short = 0, words = 0; (TH.STORIES || []).forEach((se) => (se || []).forEach((v) => { n++; const w = v[1].trim().split(/\s+/).length; words += w; if (w < 50 || !v[0]) short++; })); return { n, short, words }; });
   assert(st.n === 1152 && st.short === 0, 'every one of the 1,152 books has a page to read (' + st.n + ' pages, ' + st.words + ' words)');
   await shot('01-title');
@@ -43,17 +52,43 @@ const { chromium } = require('playwright');
   assert(await ev((y) => TH.Game.debug.P.yaw !== y, p0.yaw), 'mouse turns the view');
 
   // --- pick up a real book by aiming at it ---
-  await ev(() => { const D = TH.Game.debug, pl = D.piles.find((x) => x.wing === 0 && x.y0 < 0.1 && x.books.length > 3), top = D.books[pl.books[pl.books.length - 1]]; D.stand(pl.x - 0.9, pl.z + 0.45); D.lookAt(top.pos.x, top.pos.y, top.pos.z); });
-  await frames(); await shot('02-aim-pile');
-  assert(await ev(() => TH.Game.aim && TH.Game.aim.type === 'pile'), 'crosshair finds a book in a pile');
+  const aimAt = (id) => ev((i) => { const D = TH.Game.debug, b = D.books[i]; D.stand(b.pos.x - 0.35, b.pos.z + 0.3); D.lookAt(b.pos.x, b.pos.y, b.pos.z); }, id);
+  // a book with nothing lying on it
+  const clear = (w, skip) => ev(([w, skip]) => { const l = TH.Game.debug.loose[w]; for (let i = l.length - 1; i >= 0; i--) { const b = l[i]; if (!skip.includes(b.id) && b.base < 0.1 && !l.slice(i + 1).some((o) => Math.hypot(o.lx - b.lx, o.lz - b.lz) < 0.3)) return b.id; } return -1; }, [w, skip || []]);
+  const first = await clear(0);
+  await aimAt(first); await frames(); await shot('02-aim-floor');
+  assert(await ev((id) => TH.Game.aim && TH.Game.aim.type === 'pile' && TH.Game.aim.book.id === id, first), 'crosshair finds a book lying on the floor');
   await page.mouse.down(); await page.mouse.up(); await frames();   // a real left click on the canvas
   const held = await ev(() => TH.Game.held.slice());
-  assert(held.length === 1, 'clicking picks the book up');
+  assert(held.length === 1 && held[0] === first, 'clicking picks the book up');
+
+  // --- put it down on a table, pick it up again, drop another on the floor ---
+  await ev(() => { const D = TH.Game.debug, t = D.tables.find((x) => x.wing === 0); D.stand(t.x, t.z + 1.0); D.lookAt(t.x, t.top, t.z); });
+  await frames(); await page.keyboard.press('KeyQ'); await landed(); await shot('02b-on-table');
+  assert(await ev((id) => { const D = TH.Game.debug, b = D.books[id], t = D.tables.find((x) => x.wing === 0); return TH.Game.held.length === 0 && b.st === 'loose' && b.base === t.top && Math.abs(b.pos.y - (t.top + b.se.t / 2)) < 0.002 && Math.abs(b.lx - t.x) < 0.7; }, first), 'Q puts the book down on the table you are looking at');
+  await page.keyboard.press('KeyQ'); await frames();
+  assert(await ev(() => TH.Game.held.length === 0), 'Q with empty hands does nothing');
+  await ev((id) => { const D = TH.Game.debug, b = D.books[id]; D.stand(b.pos.x, b.pos.z + 0.8); D.lookAt(b.pos.x, b.pos.y, b.pos.z); }, first);
+  await frames(); await page.mouse.down(); await page.mouse.up(); await frames();
+  assert(await ev((id) => TH.Game.held.length === 1 && TH.Game.held[0] === id, first), 'and it can be picked up off the table again');
+  const second = await clear(0, [first]);
+  await aimAt(second); await frames(); await page.mouse.down(); await page.mouse.up(); await frames();
+  await ev(() => { const D = TH.Game.debug; D.stand(1.0, 0); D.lookAt(1.5, 0, 0.2); });
+  await frames(); await page.keyboard.press('KeyQ'); await landed();
+  assert(await ev(([a, b]) => { const D = TH.Game.debug, x = D.books[b]; return TH.Game.held.length === 1 && TH.Game.held[0] === a && x.st === 'loose' && Math.hypot(x.lx - 1.5, x.lz - 0.2) < 0.3 && x.pos.y < 0.5; }, [first, second]), 'the last book picked up is the one dropped, where you look on the floor');
+
+  // --- closing the game right now loses nothing: every loose book, the one in your hand, and where you stand ---
+  const before = await ev(() => { const D = TH.Game.debug; return { pos: D.books.map((b) => (b.st === 'loose' ? [b.lx, b.lz, b.base > 0.1] : null)), x: D.P.x, z: D.P.z }; });
+  await page.reload(); await wait(900);
+  const same = await ev((bf) => { const D = TH.Game.debug; let bad = 0; D.books.forEach((b, i) => { const p = bf.pos[i]; if (!p) { if (b.st === 'loose') bad++; return; } if (b.st !== 'loose' || Math.abs(b.lx - p[0]) > 0.002 || Math.abs(b.lz - p[1]) > 0.002 || (b.base > 0.1) !== p[2]) bad++; }); return bad; }, before);
+  assert(same === 0, 'after closing and reopening, every loose book lies exactly where it was left');
+  await page.click('[data-act="enter"]'); await wait(700);
+  assert(await ev(([id, bf]) => TH.Game.held.length === 1 && TH.Game.held[0] === id && Math.abs(TH.Game.debug.P.x - bf.x) < 0.02 && Math.abs(TH.Game.debug.P.z - bf.z) < 0.02, [first, before]), 'you are still carrying the same book and standing in the same spot');
 
   // wrong shelf first, then the right one
   await ev((id) => { const D = TH.Game.debug, b = D.books[id], cs = D.cases.find((c) => c.wing === 0 && c.id !== b.def.cat), r = cs.rows[1]; D.stand(cs.x, cs.z + cs.s * 1.6); D.lookAt(cs.x, r.y + 0.2, cs.z); }, held[0]);
   await frames(); await ev(() => TH.Game.interact());
-  assert(await ev(() => TH.Save.data.stats.mistakes === 1 && TH.Game.held.length === 1), 'a wrong shelf counts as a mistake and keeps the book');
+  assert(await ev(() => TH.Save.data.stats.mistakes === 1 && TH.Game.held.length === 1), 'a wrong shelf counts as a mistake and keeps the book ' + await ev(() => JSON.stringify([TH.Save.data.stats.mistakes, TH.Game.held, TH.Game.aim && TH.Game.aim.type, TH.Game.paused, TH.Game.locked, TH.Game.debug.P])));
   await ev((id) => { const D = TH.Game.debug, s = D.slot(id), cs = D.cases[D.books[id].def.cat]; D.stand(s.x + 0.4, cs.z + cs.s * 1.6); D.lookAt(s.x, s.y, s.z); }, held[0]);
   await frames(); await shot('03-aim-shelf');
   assert(await ev(() => TH.Game.aim && TH.Game.aim.type === 'row' && TH.Game.aim.cand >= 0), 'the right shelf offers to take the book');
@@ -70,15 +105,27 @@ const { chromium } = require('playwright');
   await page.keyboard.press('KeyR'); await wait(300);
   assert(await ev(() => !document.querySelector('#modal .reader') && !TH.Game.paused), 'R closes the book and returns to the game');
 
-  // right-click grabs every book of one section from a pile
-  await ev(() => { const D = TH.Game.debug, pl = D.piles.filter((x) => x.wing === 0 && x.y0 < 0.1 && x.books.length > 4).pop(), top = D.books[pl.books[pl.books.length - 1]]; D.stand(pl.x - 0.9, pl.z + 0.45); D.lookAt(top.pos.x, top.pos.y, top.pos.z); });
-  await frames(); await ev(() => TH.Game.grabAll()); await frames();
-  assert(await ev(() => { const h = TH.Game.held; return h.length >= 1 && new Set(h.map((id) => TH.BOOKS[id].cat)).size === 1; }), 'grab-all takes one section only');
-  await shot('04-carrying');
+  // --- take a shelved book back down: it must not pay out a second time ---
+  const pay0 = await ev(() => ({ coins: TH.Save.data.coins, placed: TH.Save.data.stats.placed, streak: TH.Game.streak }));
+  await page.mouse.down(); await page.mouse.up(); await frames();         // empty hands, pointing at the shelved book
+  assert(await ev((id) => TH.Game.held.length === 1 && TH.Game.held[0] === id && TH.Save.data.shelved[id] === 0 && TH.Game.debug.books[id].st === 'held', held[0]), 'clicking a shelved book with empty hands takes it down');
+  await ev((id) => { const D = TH.Game.debug, s = D.slot(id), cs = D.cases[D.books[id].def.cat]; D.stand(s.x, cs.z + cs.s * 1.4); D.lookAt(s.x, s.y, s.z); }, held[0]);   // capturing the mouse can nudge the view
+  await frames(); await ev(() => TH.Game.interact()); await landed();
+  const pay1 = await ev(() => ({ coins: TH.Save.data.coins, placed: TH.Save.data.stats.placed, streak: TH.Game.streak }));
+  assert(await ev((id) => TH.Save.data.shelved[id] === 1 && TH.Game.debug.books[id].st === 'shelf', held[0]) && pay1.coins === pay0.coins && pay1.placed === pay0.placed && pay1.streak === pay0.streak, 'putting it back earns nothing the second time ' + JSON.stringify([pay0, pay1]));
+
+  // right-click gathers the nearby loose books of one section
+  const seedId = await ev(() => { const l = TH.Game.debug.loose[0]; let best = -1, most = 0; l.forEach((b, i) => { if (l.slice(i + 1).some((o) => Math.hypot(o.lx - b.lx, o.lz - b.lz) < 0.3)) return; const n = l.filter((o) => o.def.cat === b.def.cat && Math.hypot(o.lx - b.lx, o.lz - b.lz) < 0.75).length; if (n > most) { most = n; best = b.id; } }); return best; });
+  await aimAt(seedId); await frames(); await ev(() => TH.Game.grabAll()); await frames();
+  const got = await ev(() => TH.Game.held.slice());
+  assert(got.length >= 2 && got.includes(seedId) && (await ev(() => new Set(TH.Game.held.map((id) => TH.BOOKS[id].cat)).size)) === 1, 'right-click gathers nearby books of one section only (' + got.length + ')');
+  await landed(); await shot('04-carrying');
   // holding the button down must never auto-click a wrong shelf
   const rep = await ev(() => { const G = TH.Game, D = G.debug, cat = TH.BOOKS[G.held[0]].cat, cs = D.cases.find((c) => c.wing === 0 && c.id !== cat), r = cs.rows[1]; D.stand(cs.x, cs.z + cs.s * 1.6); D.lookAt(cs.x, r.y + 0.2, cs.z); return TH.Save.data.stats.mistakes; });
   await frames();
   assert(await ev((m) => TH.Game.interact(true) === false && TH.Save.data.stats.mistakes === m, rep), 'hold-to-repeat never counts a wrong shelf');
+
+  if (process.env.QUICK) { await browser.close(); console.log(errors.length ? '\nERRORS:\n' + errors.join('\n') : '\nQuick test passed.'); process.exit(errors.length ? 1 : 0); }
 
   // lost bookmark
   await ev(() => { const D = TH.Game.debug, m = D.marks[2].group.position; D.stand(m.x + 0.9, m.z - 0.9); D.lookAt(m.x, m.y, m.z); });
@@ -144,7 +191,7 @@ const { chromium } = require('playwright');
   await page.reload(); await wait(900);
   assert(await ev(() => TH.shelvedCount() === 1152 && TH.Save.data.upg.satchel === 1 && TH.Settings.controls.keys.grab === 'KeyG'), 'progress and settings persist after reload');
   await page.click('[data-act="go"][data-to="settings"]'); await page.click('[data-act="reshuffle"]'); await page.click('[data-act="yes"]'); await wait(400);
-  assert(await ev(() => TH.shelvedCount() < 230 && TH.Save.data.upg.satchel === 1 && TH.Save.data.stats.rounds === 1), 'reshuffle resets the shelves but keeps upgrades');
+  assert(await ev(() => TH.shelvedCount() === 0 && TH.Game.debug.loose.every((l) => l.length === 288) && TH.Save.data.upg.satchel === 1 && TH.Save.data.stats.rounds === 1), 'reshuffle puts every book back on the floor but keeps upgrades');
   console.log('achievements unlocked:', await ev(() => Object.keys(TH.Save.data.ach).length), '/', info.ach, ' coins earned:', await ev(() => TH.Save.data.stats.earned));
 
   await browser.close();

@@ -9,6 +9,7 @@ on:
     branches: [main, 'claude/**']
     paths:
       - 'src/**'
+      - 'tools/build-html.js'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -29,6 +30,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      # the whole game as one file, offered as a download on the title screen
+      - name: Build the single-file version
+        run: node tools/build-html.js src/The-Night-Shelver.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -1,7 +1,7 @@
 # The Night Shelver
 
 A cozy first-person library organizing game for PC. Nobody has shelved a book in Emberwick Library
-for forty years. Walk the rooms, pick books out of the piles, and put every one back on its shelf.
+for forty years. Walk the rooms, pick the books up off the floor, and put every one back on its shelf.
 No timer, no fail state.
 
 ## What's in it
@@ -41,12 +41,15 @@ One-time setup: in the repository on GitHub, open **Settings → Pages** and set
 
 **Install it from the browser (no download, nothing for antivirus to flag):** in Chrome or Edge, open the link and click **Install as an app** on the title screen, or the install icon at the right end of the address bar. The game then has its own window, a desktop and Start-menu icon, and works offline. The web version stores its files with a service worker (`src/sw.js`) and describes itself with `src/manifest.webmanifest`.
 
+**As one file:** `The-Night-Shelver.html` is the entire game in a single file. Double-click it and it plays in your browser: nothing to install, no internet needed. Download it from the link at the bottom of the web version's title screen, or build it with `npm run html` (output in `dist/`).
+
 **From source** (needs [Node.js](https://nodejs.org) 20+):
 
 ```
 npm install
 npm start          # run the game
 npm run dist       # build an installer for the OS you are on (output in dist/)
+npm run html       # build the single-file version (dist/The-Night-Shelver.html)
 ```
 
 ## Controls
@@ -56,7 +59,8 @@ npm run dist       # build an installer for the OS you are on (output in dist/)
 | Look | Mouse |
 | Walk | `W` `A` `S` `D`, hold `Shift` to run |
 | Pick up a book / shelve a book | Left mouse button or `E` |
-| Take every book of that section from a pile | Right mouse button or `F` |
+| Gather the nearby loose books of that section, or take a book down from a shelf | Right mouse button or `F` |
+| Put down the last book you picked up (on the floor or a table) | `Q` |
 | Read the book you are pointing at or carrying | `R` |
 | Knacks | `1` `2` `3` `4` |
 | Pause | `P` (and `Esc`, which also frees the mouse) |
@@ -85,6 +89,7 @@ tools/smoke-test.js   automated play-through that shelves every book (needs Play
 tools/check-stories.js validates the book text (counts, lengths, format)
 tools/build-stories.js compiles content/stories into src/js/stories.js
 tools/make-icon.js    regenerates the app icons
+tools/build-html.js   packs the game into one html file
 ```
 
-Progress is saved automatically on your computer. You can reshuffle the library or erase everything in **Settings → Gameplay**.
+Progress is saved automatically after everything you do: which books are shelved, where every loose book lies, what you are carrying and where you stand. Each place you play (the website, the installed app, the single file) keeps its own save; **Settings → Gameplay** can save your progress to a file and load it somewhere else. You can also reshuffle the library or erase everything there.

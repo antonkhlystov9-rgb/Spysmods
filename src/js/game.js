@@ -32,8 +32,11 @@
   let cv, renderer, scene, camera, handScene, handCam, handGroup;
   let fireLight = null, woodFine = null, woodFast = null;
   const fineSwap = [], sways = [], roomGroups = [];
+  const loose = TH.WINGS.map(() => []);        // per room: the books lying about, in the order they were laid down
+  const _c = new T.Color();
+  let built = false, lockAt = 0;
   let cover, pages, handCover, handPages, hemi, sun, winMat, lampMat, dust, sparks, hlBook, hlRow, ghost;
-  const lamps = [], halos = [], flames = [], spinners = [], clockHands = {}, books = [], piles = [], cases = [], colliders = [], gates = [], marks = [], anims = [], handMeshes = [], beacons = [];
+  const lamps = [], halos = [], flames = [], spinners = [], clockHands = {}, books = [], tables = [], cases = [], colliders = [], gates = [], marks = [], anims = [], handMeshes = [], beacons = [];
   const P = { x: 1.05, z: 0, yaw: -Math.PI / 2, pitch: 0 };
   let dirty = false, clock = 0, last = 0, lastDraw = 0, fpsT = 0, fpsN = 0, bob = 0, stepPhase = 0, pending = 0;
   let lockFails = 0, epoch = 0;
@@ -345,10 +348,6 @@
           vec4 nm = texture2D( numMap, vec2((vInst.x + vNum.x) / 16.0, vNum.y) );
           texelColor.rgb = mix(texelColor.rgb, nm.rgb, nm.a);
         }
-        if (vInst.y > 0.5) {
-          float lum = dot(texelColor.rgb, vec3(0.299, 0.587, 0.114));
-          texelColor.rgb = vec3(1.0, 0.78, 0.30) * (0.5 + 0.8 * lum);
-        }
         texelColor = mapTexelToLinear( texelColor );
         diffuseColor *= texelColor;`);
     };
@@ -475,13 +474,13 @@
         grp.position.set(x0, 0, 0); scene.add(grp);
         gates.push({ idx: w - 1, x: x0, group: grp, col: wall(x0 - 0.1, x0 + 0.1, -DOOR_W / 2, DOOR_W / 2), open: false });
       }
-      // tables, with three piles each
+      // tables: a surface books can be put on
       for (const [tx, tz] of pl.tables) {
         solid(x0 + tx, 0.75, tz, 1.6, 0.06, 0.9, woodL);
         if (pl.cloth) solid(x0 + tx, 0.784, tz, 1.36, 0.012, 0.66, pl.cloth);
         for (const a of [-1, 1]) for (const b of [-1, 1]) solid(x0 + tx + a * 0.72, 0.36, tz + b * 0.37, 0.07, 0.72, 0.07, wood);
         block(x0 + tx - 0.8, x0 + tx + 0.8, tz - 0.45, tz + 0.45);
-        for (const dx of [-0.5, 0, 0.5]) piles.push({ wing: w, x: x0 + tx + dx, z: tz, y0: pl.cloth ? 0.792 : 0.782, books: [], h: 0, col: null });
+        tables.push({ wing: w, x: x0 + tx, z: tz, top: pl.cloth ? 0.792 : 0.782 });
       }
       // standing lamps and the hanging lights
       for (const [lx, lz] of pl.lamps) {
@@ -515,13 +514,6 @@
         cases[cat.id] = cs;
         block(x - (IW / 2 + 0.06), x + (IW / 2 + 0.06), z - CD / 2 - 0.02, z + CD / 2 + 0.02);
       });
-      // piles on the floor: a grid that leaves the tables and bookcases clear
-      for (let i = 0; i < 7; i++) for (const pz of pl.rows) {
-        const lx = 1.3 + i * 1.233, px = x0 + lx;
-        if (pl.tables.some(([tx, tz]) => Math.abs(lx - tx) < 1.27 && Math.abs(pz - tz) < 1.12)) continue;
-        if (pl.cases.some(([cx, cz]) => Math.abs(lx - cx) < 0.9 && Math.abs(pz - cz) < 0.75)) continue;
-        piles.push({ wing: w, x: px, z: pz, y0: 0.002, books: [], h: 0, col: block(px - 0.17, px + 0.17, pz - 0.17, pz + 0.17) });
-      }
       // five lost bookmarks per room
       const c1 = pl.cases[1], t0 = pl.tables[0], t2 = pl.tables[2];
       [[c1[0], 2.42, c1[1]], [t2[0], 0.32, t2[1]], [0.5, 0.3, HALF - 0.5], [t0[0] - 0.74, 0.98, t0[1] + 0.3], [9.5, 0.3, -HALF + 0.5]].forEach(([lx, ly, lz], i) => {
@@ -643,7 +635,8 @@
     TH.BOOKS.forEach((def, i) => {
       const se = TH.SERIES[def.series];
       inst.setXYZW(i, se.id % ACOLS, Math.floor(se.id / ACOLS), def.vol, def.gold ? 1 : 0);
-      books.push({ id: i, def, se, st: 'pile', pos: new T.Vector3(), quat: new T.Quaternion(), vis: true, yaw: rand(-0.5, 0.5), jx: rand(-0.02, 0.02), jz: rand(-0.02, 0.02), pile: null });
+      pages.setColorAt(i, col.set(def.gold ? '#f7c948' : '#ffffff'));       // gilt edges
+      books.push({ id: i, def, se, st: 'loose', pos: new T.Vector3(), quat: new T.Quaternion(), vis: true, yaw: 0, lx: 0, lz: 0, base: 0.002, top: 0, room: 0 });
     });
     scene.add(cover); scene.add(pages);
 
@@ -690,16 +683,41 @@
     return out.set(cs.x + cs.s * lx, ROW_Y0 + se.row * ROW_DY + se.h / 2 + 0.004, cs.z + cs.s * lz);
   }
   const pileQuat = (b, out) => out.setFromAxisAngle(Y_AXIS, b.yaw).multiply(Q_FLAT);
-  function restack(p, fast) {
-    let y = p.y0;
-    for (const id of p.books) {
-      const b = books[id], ty = y + b.se.t / 2;
-      if (fast) { b.pos.set(p.x + b.jx, ty, p.z + b.jz); pileQuat(b, b.quat); b.vis = true; write(b); }
-      else if (Math.abs(b.pos.y - ty) > 1e-4 && b.st === 'pile') fly(b, new T.Vector3(p.x + b.jx, ty, p.z + b.jz), pileQuat(b, new T.Quaternion()), 0.16, 0);
-      y += b.se.t;
+  // Loose books lie flat wherever they were left. One that overlaps an earlier one rests on top of it,
+  // so heaps form by themselves and the books above drop when one is pulled out from underneath.
+  const REST2 = 0.27 * 0.27, FLOOR = 0.002;
+  function settle(w, animate) {
+    const list = loose[w];
+    for (let i = 0; i < list.length; i++) {
+      const b = list[i]; let y = b.base;
+      for (let k = 0; k < i; k++) { const o = list[k]; if (o.base !== b.base) continue; const dx = o.lx - b.lx, dz = o.lz - b.lz; if (dx * dx + dz * dz < REST2 && o.top > y) y = o.top; }
+      b.top = y + b.se.t;
+      const ty = y + b.se.t / 2;
+      if (!animate) { b.pos.set(b.lx, ty, b.lz); pileQuat(b, b.quat); b.vis = true; write(b); }
+      else if (b.st === 'loose' && (Math.abs(b.pos.y - ty) > 1e-4 || Math.abs(b.pos.x - b.lx) > 1e-4 || Math.abs(b.pos.z - b.lz) > 1e-4) && !anims.some((a) => a.b === b && Math.abs(a.p1.y - ty) < 1e-4))
+        fly(b, new T.Vector3(b.lx, ty, b.lz), pileQuat(b, new T.Quaternion()), 0.22, 0);
     }
-    p.h = y - p.y0;
-    if (p.col) p.col.on = p.books.length > 0;
+  }
+  const tableAt = (x, z) => tables.find((t) => Math.abs(x - t.x) < 0.8 && Math.abs(z - t.z) < 0.45);
+  const inFurniture = (x, z, m) => colliders.some((c) => (c.on || !c.wall) && x > c.x0 - m && x < c.x1 + m && z > c.z0 - m && z < c.z1 + m);
+  const freeFloor = (x, z) => x > 0.22 && x < LEN - 0.22 && Math.abs(z) < HALF - 0.22 && !inFurniture(x, z, 0.14);
+  // scatter a room's books across its floor: singles everywhere, with loose heaps here and there
+  function dealRoom(w, list) {
+    const x0 = w * RW, mine = loose[w];
+    const crowd = (x, z) => { let n = 0; for (const o of mine) if (o.base === FLOOR && (o.lx - x) * (o.lx - x) + (o.lz - z) * (o.lz - z) < REST2) n++; return n; };
+    for (const b of TH.shuffle(list)) {
+      const heap = mine.length > 0 && Math.random() < 0.14;        // most lie on their own; a few lean on a neighbour
+      let x = x0 + RW / 2, z = 2, least = 99;
+      for (let k = 0; k < 140; k++) {
+        const seed = heap && k < 30 ? mine[(Math.random() * mine.length) | 0] : null;
+        const cx = seed ? seed.lx + rand(-0.22, 0.22) : x0 + rand(0.3, RW - 0.3), cz = seed ? seed.lz + rand(-0.22, 0.22) : rand(-HALF + 0.3, HALF - 0.3);
+        if (cx < x0 + 0.26 || cx > x0 + RW - 0.26 || !freeFloor(cx, cz) || Math.hypot(cx - 1.05, cz) < 0.55) continue;
+        const n = crowd(cx, cz);
+        if (seed ? n <= 2 : n === 0) { x = cx; z = cz; break; }
+        if (!seed && n < least) { least = n; x = cx; z = cz; }
+      }
+      b.st = 'loose'; b.room = w; b.lx = x; b.lz = z; b.base = FLOOR; b.yaw = rand(0, 6.283); mine.push(b);
+    }
   }
   function fly(b, p1, q1, dur, arc, done) {
     for (let i = anims.length - 1; i >= 0; i--) if (anims[i].b === b) anims.splice(i, 1);
@@ -710,9 +728,8 @@
   // ---------- round state ----------
   function newRound() {
     const s = S();
-    s.shelved = TH.BOOKS.map(() => 0);
-    for (const b of TH.shuffle(TH.BOOKS.slice()).slice(0, 138)) s.shelved[b.id] = 1;      // always 1,014 left to shelve
-    for (const se of TH.SERIES) if (se.books.every((id) => s.shelved[id])) s.shelved[se.books[0]] = 0;   // never start with a finished row
+    s.shelved = TH.BOOKS.map(() => 0);                 // every book starts on the floor
+    s.paid = {}; s.rowsDone = {}; s.casesDone = {}; s.wingsDone = {}; s.loose = null; s.held = [];
     s.marks = {}; s.gates = {}; s.pos = null; s.started = true; s.charge = {}; s.fx = { golden: 0, way: 0 }; s.streak = 0; s.finaleShown = 0;
     for (const a of TH.ABIL) s.charge[a.id] = Math.floor(a.need * 0.6);
     TH.Save.flush();
@@ -721,36 +738,62 @@
     const s = S();
     epoch++;                                                         // cancels any delayed moves from before
     anims.length = 0; G.held = []; pending = 0; G.streak = s.streak || 0; G.fx = { golden: (s.fx && s.fx.golden) || 0, way: (s.fx && s.fx.way) || 0 };
-    for (const p of piles) p.books = [];
+    for (const list of loose) list.length = 0;
     for (const cs of cases) { cs.done = false; for (const r of cs.rows) { r.slots.fill(-1); r.filled = 0; r.landed = 0; } }
-    const loose = TH.WINGS.map(() => []);
+    const seen = new Set();
     for (const b of books) {
       if (s.shelved[b.id]) {
         const row = cases[b.def.cat].rows[b.se.row];
-        b.st = 'shelf'; b.vis = true; b.pile = null; slotPos(b, b.pos); b.quat.copy(row.cs.quat); write(b);
-        row.slots[b.def.vol] = b.id; row.filled++; row.landed++;
-      } else loose[b.def.wing].push(b);
+        b.st = 'shelf'; b.vis = true; slotPos(b, b.pos); b.quat.copy(row.cs.quat); write(b);
+        row.slots[b.def.vol] = b.id; row.filled++; row.landed++; seen.add(b.id);
+      }
     }
     for (const cs of cases) cs.done = cs.rows.every((r) => r.landed === NV);
-    loose.forEach((list, w) => {
-      TH.shuffle(list);
-      const wp = TH.shuffle(piles.filter((p) => p.wing === w)), size = Math.max(4, Math.ceil(list.length / wp.length) + 1);
-      let k = 0;
-      for (const b of list) {
-        let tries = 0;
-        while (wp[k % wp.length].books.length >= size + (k % 3) && tries++ < wp.length) k++;
-        const p = wp[k % wp.length]; p.books.push(b.id); b.pile = p; b.st = 'pile';
-        if (Math.random() < 0.55) k++;
+    // saves from before these existed: whatever is on the shelves has already been paid for and counted
+    if (!s.paid) { s.paid = {}; for (const b of books) if (s.shelved[b.id]) s.paid[b.id] = 1; }
+    if (!s.rowsDone) {
+      s.rowsDone = {}; s.casesDone = {}; s.wingsDone = {};
+      for (const cs of cases) { for (const r of cs.rows) if (r.filled === NV) s.rowsDone[r.se.id] = 1; if (cs.done) s.casesDone[cs.id] = 1; }
+      for (let w = 0; w < NW; w++) if (cases.every((c) => c.wing !== w || c.done)) s.wingsDone[w] = 1;
+    }
+    // every loose book goes back exactly where it was left; the ones in your arms stay in your arms
+    if (Array.isArray(s.loose)) s.loose.forEach((list, w) => {
+      if (w >= NW || !Array.isArray(list)) return;
+      for (const e of list) {
+        const b = books[e[0]];
+        if (!b || seen.has(b.id) || !(e[1] > 0 && e[1] < LEN) || !(Math.abs(e[2]) < HALF)) continue;
+        const t = e[4] ? tableAt(e[1], e[2]) : null;
+        b.st = 'loose'; b.room = wingOf(e[1]); b.lx = e[1]; b.lz = e[2]; b.yaw = e[3] || 0; b.base = t ? t.top : FLOOR;
+        loose[b.room].push(b); seen.add(b.id);
       }
     });
-    for (const p of piles) restack(p, true);
+    for (const id of Array.isArray(s.held) ? s.held : []) {
+      const b = books[id];
+      if (!b || seen.has(id) || G.held.length >= cap()) continue;
+      b.st = 'held'; b.vis = false; write(b); G.held.push(id); seen.add(id);
+    }
+    const fresh = TH.WINGS.map(() => []);
+    for (const b of books) if (!seen.has(b.id)) fresh[b.def.wing].push(b);          // a new library, or anything unaccounted for
+    fresh.forEach((list, w) => { if (list.length) dealRoom(w, list); });
+    for (let w = 0; w < NW; w++) settle(w, false);
     for (const g of gates) {
       if (TH.shelvedCount(g.idx) / TH.WINGS[g.idx].books >= TH.GATE_AT) s.gates[g.idx] = 1;      // in case the game closed before the door swung
       g.open = !!s.gates[g.idx]; g.group.visible = !g.open; g.col.on = !g.open;
     }
     for (const mk of marks) { mk.got = !!s.marks[mk.id]; mk.group.visible = !mk.got; }
     refreshHand();
+    built = true;
+    syncSave(false);
   }
+  // Write down where everything is. Called after every change, so closing the game at any moment loses nothing.
+  function syncSave(now) {
+    const s = S();
+    s.loose = loose.map((list) => list.map((b) => [b.id, +b.lx.toFixed(3), +b.lz.toFixed(3), +b.yaw.toFixed(2), b.base > 0.1 ? 1 : 0]));
+    s.held = G.held.slice();
+    if (G.mode === 'play') { s.pos = { x: +P.x.toFixed(2), z: +P.z.toFixed(2), yaw: +P.yaw.toFixed(3) }; s.fx = { golden: G.fx.golden, way: Math.round(G.fx.way) }; s.streak = G.streak; }
+    if (now) TH.Save.flush(); else TH.Save.commit();
+  }
+  G.sync = syncSave;
 
   // ---------- setup ----------
   function makeRenderer() {
@@ -774,6 +817,11 @@
     document.addEventListener('pointerlockerror', () => { G.locked = false; lockFails++; });
     window.addEventListener('resize', G.resize);
     window.addEventListener('blur', () => { G.keys = {}; mouseDown = false; });
+    // write everything down the moment the window is hidden or closed, so nothing is ever lost
+    const saveNow = () => { if (built) syncSave(true); };
+    document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); });
+    window.addEventListener('pagehide', saveNow);
+    window.addEventListener('beforeunload', saveNow);
     if (!S().started || S().shelved.length !== NB) newRound();
     buildState();
     G.applyVideo();
@@ -811,7 +859,7 @@
     buildState();
     const p = s.pos;
     if (p && TH.wingOpen(wingOf(p.x))) { P.x = p.x; P.z = p.z; P.yaw = p.yaw; P.pitch = 0; } else { P.x = 1.05; P.z = 0; P.yaw = -Math.PI / 2; P.pitch = -0.12; }
-    // piles are dealt afresh each time, so the saved spot may now be inside one: step out to the nearest clear floor
+    // if the saved spot is somehow inside furniture, step out to the nearest clear floor
     const stuck = (x, z) => colliders.some((c) => c.on && x > c.x0 - PR && x < c.x1 + PR && z > c.z0 - PR && z < c.z1 + PR);
     if (stuck(P.x, P.z)) {
       search: for (let r = 0.1; r < 3; r += 0.1) for (let a = 0; a < 6.28; a += 0.4) {
@@ -822,9 +870,9 @@
     G.mode = 'play'; G.paused = false; aimKey = '';
     TH.UI.hud();
     if (TH.shelvedCount() === NB && !s.finaleShown) setTimeout(() => { if (G.mode === 'play') TH.UI.finale(); }, 1500);
-    TH.UI.tip('move', 'Look around with the mouse and walk with W A S D. Point at a book in a pile and click to pick it up.');
+    TH.UI.tip('move', 'Look around with the mouse and walk with W A S D. Point at a book on the floor and click to pick it up.');
   };
-  G.stop = () => { savePos(); G.mode = 'menu'; G.paused = false; G.aim = null; G.held = []; pending = 0; epoch++; refreshHand(); hideAim(); if (document.pointerLockElement) document.exitPointerLock(); TH.Save.flush(); };
+  G.stop = () => { syncSave(true); G.mode = 'menu'; G.paused = false; G.aim = null; hideAim(); if (document.pointerLockElement) document.exitPointerLock(); TH.Save.flush(); };
   G.pause = (p) => { G.paused = p; G.keys = {}; mouseDown = false; stick.x = stick.y = 0; if (p) { savePos(); if (document.pointerLockElement) document.exitPointerLock(); } };
   G.reshuffle = () => { S().stats.rounds++; newRound(); TH.checkAch(); };
   G.rebuild = () => { if (!S().started || S().shelved.length !== NB) newRound(); buildState(); };
@@ -832,19 +880,20 @@
     if (G.mode !== 'play' || G.paused || document.pointerLockElement === cv) return;
     try { if (!cv.requestPointerLock) { lockFails = 2; return; } const r = cv.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (e) { lockFails = 2; /* not available: drag-to-look still works */ }
   };
-  function savePos() { if (G.mode === 'play') { const s = S(); s.pos = { x: P.x, z: P.z, yaw: P.yaw }; s.fx = { golden: G.fx.golden, way: Math.round(G.fx.way) }; s.streak = G.streak; TH.Save.commit(); } }
+  function savePos() { if (G.mode === 'play') syncSave(false); }
 
   // ---------- input ----------
   function onLock() {
     const was = G.locked;
     G.locked = document.pointerLockElement === cv;
-    if (G.locked) lockFails = 0;
+    if (G.locked) { lockFails = 0; lockAt = performance.now(); }
     if (was && !G.locked && G.mode === 'play' && !G.paused) TH.UI.autoPause();
     TH.UI.lockHint();
   }
   function onMove(e) {
     if (G.mode !== 'play' || G.paused) return;
     if (!G.locked && !(e.buttons & 2)) return;          // without mouse capture, hold the right button to look
+    if (G.locked && performance.now() - lockAt < 150) return;      // browsers can report one wild jump as the mouse is captured
     const k = 0.0022 * TH.Settings.controls.sens / 100;
     P.yaw -= e.movementX * k;
     P.pitch = clamp(P.pitch - e.movementY * k * (TH.Settings.controls.invertY ? -1 : 1), -1.45, 1.45);
@@ -895,14 +944,18 @@
   function pick() {
     const o = camera.position, d = camera.getWorldDirection(_v2), R = reach();
     let best = null, bt = R;
-    for (const p of piles) {
-      if (!p.books.length || Math.abs(p.x - o.x) > R + 0.3) continue;
-      const t = rayBox(o.x, o.y, o.z, d.x, d.y, d.z, p.x - 0.2, p.x + 0.2, p.y0, p.y0 + p.h, p.z - 0.2, p.z + 0.2);
+    const cw = wingOf(o.x), lim = (R + 0.3) * (R + 0.3);
+    // a table top hides whatever is behind it
+    for (const t of tables) { if (Math.abs(t.x - o.x) > R + 1) continue; const tt = rayBox(o.x, o.y, o.z, d.x, d.y, d.z, t.x - 0.8, t.x + 0.8, 0.72, t.top, t.z - 0.45, t.z + 0.45); if (tt >= 0 && tt < bt) { bt = tt; best = null; } }
+    for (let w = Math.max(0, cw - 1); w <= Math.min(NW - 1, cw + 1); w++) for (const b of loose[w]) {
+      if (b.st !== 'loose') continue;
+      const ex = b.pos.x - o.x, ez = b.pos.z - o.z; if (ex * ex + ez * ez > lim) continue;
+      // the ray in the book's own frame: it lies flat, turned by its yaw
+      const cs = Math.cos(b.yaw), sn = Math.sin(b.yaw);
+      const t = rayBox(-(cs * ex - sn * ez), o.y - b.pos.y, -(sn * ex + cs * ez), cs * d.x - sn * d.z, d.y, sn * d.x + cs * d.z,
+        -b.se.h / 2, b.se.h / 2, -b.se.t / 2, b.se.t / 2, -b.se.d / 2, b.se.d / 2);
       if (t < 0 || t >= bt) continue;
-      const hy = o.y + d.y * t - 1e-4;
-      let y = p.y0, idx = p.books.length - 1;
-      for (let i = 0; i < p.books.length; i++) { y += books[p.books[i]].se.t; if (hy <= y) { idx = i; break; } }
-      bt = t; best = { type: 'pile', pile: p, idx, book: books[p.books[idx]] };
+      bt = t; best = { type: 'pile', book: b };
     }
     for (const cs of cases) {
       if (Math.abs(cs.x - o.x) > R + 0.6) continue;
@@ -943,6 +996,7 @@
       const b = a.book, full = G.held.length + pending >= cap();
       hlBook.visible = true; hlBook.position.copy(b.pos); hlBook.quaternion.copy(b.quat); hlBook.scale.set(b.se.t + 0.012, b.se.h + 0.02, b.se.d + 0.02);
       title = TH.bookTitle(b.def); hint = (b.def.gold ? 'Gilded · ' : '') + TH.CATS[b.def.cat].name + (full ? ' · your hands are full' : ' · click to pick up') + ` · ${TH.UI.keyLabel('read')} to read`;
+      if (G.held.length) hint += ` · ${TH.UI.keyLabel('drop')} drops one here`;
       tone = full ? 'warn' : ''; key = 'p' + b.id + full;
     } else if (a && a.type === 'row') {
       const row = a.row, cs = a.cs, se = row.se;
@@ -951,7 +1005,7 @@
       title = `${cs.cat.name} › ${se.name}`; hint = `${row.filled}/${NV} shelved`;
       if (a.cand >= 0) {
         const b = books[a.cand];
-        ghost.visible = true; slotPos(b, ghost.position); ghost.quaternion.copy(cs.quat); ghost.scale.set(se.t, se.h, se.d); ghost.material.color.set(b.def.gold ? '#f0c24e' : se.color);
+        ghost.visible = true; slotPos(b, ghost.position); ghost.quaternion.copy(cs.quat); ghost.scale.set(se.t, se.h, se.d); ghost.material.color.set(se.color);
         hint += ` · click to shelve Vol. ${TH.ROMAN[b.def.vol]}`; tone = 'good';
       } else if (a.fits.length) {
         const b = books[a.fits[0]], dir = b.def.vol < a.slot ? 'left' : 'right';
@@ -960,7 +1014,7 @@
       if (a.book && a.cand < 0) {
         const b = a.book;
         hlBook.visible = true; hlBook.position.copy(b.pos); hlBook.quaternion.copy(b.quat); hlBook.scale.set(b.se.t + 0.006, b.se.h + 0.012, b.se.d + 0.012);
-        title = TH.bookTitle(b.def); hint = `${cs.cat.name} · on its shelf · ${TH.UI.keyLabel('read')} to read` + (a.fits.length ? '' : G.held.length ? ' · nothing you carry goes here' : ''); tone = '';
+        title = TH.bookTitle(b.def); hint = `${cs.cat.name} · on its shelf · ${TH.UI.keyLabel('read')} to read · ${G.held.length ? 'right-click' : 'click'} to take it down` + (a.fits.length ? '' : G.held.length ? ' · nothing you carry goes here' : ''); tone = '';
       }
       key = 'r' + se.id + '|' + a.cand + '|' + a.slot * (TH.Settings.game.exact ? 1 : 0) + '|' + row.filled + '|' + G.held.length + '|' + (a.book ? a.book.id : -1);
     } else if (a && a.type === 'mark') { title = 'A lost bookmark'; hint = 'Click to pick it up'; tone = 'good'; key = 'm' + a.mark.id; }
@@ -972,33 +1026,73 @@
   }
 
   // ---------- actions ----------
-  function takeFromPile(p, idx) {
-    const b = books[p.books[idx]];
-    p.books.splice(idx, 1); b.pile = null; b.st = 'held'; b.vis = false; write(b);
-    for (let i = anims.length - 1; i >= 0; i--) if (anims[i].b === b) anims.splice(i, 1);
+  function takeLoose(b) {
+    const list = loose[b.room], i = list.indexOf(b);
+    if (i >= 0) list.splice(i, 1);
+    if (b.base === FLOOR) S().stats.piles++;                 // counts books picked up off the floor
+    b.st = 'held'; b.vis = false; write(b);
+    for (let k = anims.length - 1; k >= 0; k--) if (anims[k].b === b) anims.splice(k, 1);
     G.held.push(b.id);
-    restack(p, false);
-    if (!p.books.length) S().stats.piles++;
+    settle(b.room, true);
     S().stats.mostHeld = Math.max(S().stats.mostHeld, G.held.length);
     return b;
   }
+  // take a book back down from its shelf
+  function takeShelved(b) {
+    if (b.st !== 'shelf') return false;
+    if (G.held.length + pending >= cap()) { TH.Audio.play('deny'); TH.UI.flash('Your hands are full'); return false; }
+    const s = S(), row = cases[b.def.cat].rows[b.se.row];
+    row.slots[b.def.vol] = -1; row.filled--; row.landed--; row.cs.done = false; s.shelved[b.id] = 0;
+    b.st = 'held'; b.vis = false; write(b); G.held.push(b.id);
+    s.stats.mostHeld = Math.max(s.stats.mostHeld, G.held.length);
+    TH.Audio.play('pick'); refreshHand(); syncSave(false); TH.UI.hud(); aimKey = '';
+    return true;
+  }
+  // where a book would land if you let go: on the book, table or floor you are looking at, else at your feet
+  function dropSpot() {
+    const o = camera.position, d = camera.getWorldDirection(_v2), a = G.aim;
+    if (a && a.type === 'pile') return { x: a.book.lx + rand(-0.06, 0.06), z: a.book.lz + rand(-0.06, 0.06), base: a.book.base };
+    let bt = reach() + 0.4, spot = null;
+    for (const t of tables) {
+      const tt = rayBox(o.x, o.y, o.z, d.x, d.y, d.z, t.x - 0.8, t.x + 0.8, 0.72, t.top, t.z - 0.45, t.z + 0.45);
+      if (tt >= 0 && tt < bt) { bt = tt; spot = { x: clamp(o.x + d.x * tt, t.x - 0.64, t.x + 0.64), z: clamp(o.z + d.z * tt, t.z - 0.3, t.z + 0.3), base: t.top }; }
+    }
+    if (d.y < -0.05) {
+      const tt = (o.y - FLOOR) / -d.y, x = o.x + d.x * tt, z = o.z + d.z * tt;
+      // only into the room you are in, or through a doorway that is open: never past a locked door
+      const here = wingOf(P.x), there = wingOf(x);
+      if (tt < bt && freeFloor(x, z) && (there === here || (Math.abs(z) < DOOR_W / 2 - 0.15 && TH.wingOpen(Math.max(here, there))))) spot = { x, z, base: FLOOR };
+    }
+    if (!spot) { const x = P.x - Math.sin(P.yaw) * 0.6, z = P.z - Math.cos(P.yaw) * 0.6; spot = freeFloor(x, z) ? { x, z, base: FLOOR } : { x: P.x, z: P.z, base: FLOOR }; }
+    return spot;
+  }
+  G.drop = () => {
+    if (G.mode !== 'play' || G.paused) return false;
+    if (!G.held.length) { TH.UI.flash('You are not carrying anything'); return false; }
+    const spot = dropSpot(), b = books[G.held.pop()];
+    b.st = 'loose'; b.room = wingOf(spot.x); b.lx = spot.x; b.lz = spot.z; b.base = spot.base; b.yaw = rand(0, 6.283);
+    b.vis = true; handWorld(b.pos); pileQuat(b, b.quat);
+    loose[b.room].push(b); settle(b.room, true);
+    TH.Audio.play('drop'); refreshHand(); syncSave(false); TH.UI.hud(); aimKey = '';
+    return true;
+  };
   // `repeat` is true for hold-to-repeat: it may only do something valid, never complain or cost a streak.
   G.interact = (repeat) => {
     const a = G.aim;
     if (G.mode !== 'play' || G.paused || !a) return false;
     if (a.type === 'pile') {
-      if (a.pile.books[a.idx] !== a.book.id) return false;           // the aim is from an earlier frame
+      if (a.book.st !== 'loose') return false;                        // the aim is from an earlier frame
       if (repeat && G.held.length + pending >= cap()) return false;
       if (G.held.length + pending >= cap()) { TH.Audio.play('deny'); TH.UI.flash('Your hands are full — shelve some first'); return false; }
-      takeFromPile(a.pile, a.idx);
-      TH.Audio.play('pick'); refreshHand(); TH.checkAch(); TH.UI.hud(); aimKey = '';
+      takeLoose(a.book);
+      TH.Audio.play('pick'); refreshHand(); syncSave(false); TH.checkAch(); TH.UI.hud(); aimKey = '';
       if (G.held.length === 1) TH.UI.tip('shelve', `Now find the bookcase with that section’s name on top, point at the shelf for its series, and click. Curious what’s inside? Press ${TH.UI.keyLabel('read')} to read any book.`);
       return true;
     }
     if (a.type === 'row') {
       if (a.cand >= 0) { if (!G.held.includes(a.cand)) return false; shelve(books[a.cand], true); return true; }
       if (repeat) return false;
-      if (!G.held.length) { TH.UI.flash('Pick up some books first'); return false; }
+      if (!G.held.length) { if (a.book) takeShelved(a.book); else TH.UI.flash('Pick up some books first'); return false; }
       if (a.fits.length) { TH.Audio.play('deny'); return false; }           // exact mode: right shelf, wrong gap
       G.streak = 0; S().stats.mistakes++; TH.Audio.play('wrong');
       TH.UI.flash('None of those belong on this shelf'); TH.checkAch(); TH.UI.hud();
@@ -1007,7 +1101,7 @@
     if (repeat) return false;
     if (a.type === 'mark') {
       const mk = a.mark; if (mk.got) return false; mk.got = true; mk.group.visible = false;
-      S().marks[mk.id] = 1; S().stats.marks++; TH.Save.earn(25);
+      S().marks[mk.id] = 1; S().stats.marks++; TH.Save.earn(25); syncSave(false);
       TH.Audio.play('gold'); burst(mk.group.position, 22);
       TH.UI.flash('Lost bookmark found! +25 coins', 'good'); TH.checkAch(); TH.UI.hud(); aimKey = '';
       return false;
@@ -1024,14 +1118,19 @@
     TH.UI.openBook(id);
   };
   // take every book in the pile that belongs to the same section as the one you point at
+  // right-click: on a loose book, gather every nearby book of the same section; on a shelf, take that book down
   G.grabAll = () => {
     const a = G.aim;
-    if (G.mode !== 'play' || G.paused || !a || a.type !== 'pile') return;
-    const cat = a.book.def.cat, p = a.pile;
+    if (G.mode !== 'play' || G.paused || !a) return;
+    if (a.type === 'row') { if (a.book) takeShelved(a.book); return; }
+    if (a.type !== 'pile' || a.book.st !== 'loose') return;
+    const cat = a.book.def.cat, c0 = a.book;
+    const near = loose[c0.room].filter((b) => b.st === 'loose' && b.def.cat === cat && Math.hypot(b.lx - c0.lx, b.lz - c0.lz) < 0.75)
+      .sort((p, q) => Math.hypot(p.lx - c0.lx, p.lz - c0.lz) - Math.hypot(q.lx - c0.lx, q.lz - c0.lz));
     let n = 0;
-    for (let i = p.books.length - 1; i >= 0 && G.held.length + pending < cap(); i--) if (books[p.books[i]].def.cat === cat) { takeFromPile(p, i); n++; }
+    for (const b of near) { if (G.held.length + pending >= cap()) break; takeLoose(b); n++; }
     if (!n) { TH.Audio.play('deny'); TH.UI.flash('Your hands are full — shelve some first'); return; }
-    TH.Audio.play('pick'); refreshHand(); TH.checkAch(); TH.UI.hud(); aimKey = '';
+    TH.Audio.play('pick'); refreshHand(); syncSave(false); TH.checkAch(); TH.UI.hud(); aimKey = '';
   };
   function shelve(b, manual, delay) {
     if (b.st !== 'held') return;                                       // already on its way (two inputs in one frame)
@@ -1039,27 +1138,34 @@
     const i = G.held.indexOf(b.id); if (i >= 0) G.held.splice(i, 1);
     b.st = 'fly'; b.vis = true; handWorld(b.pos); pileQuat(b, b.quat).premultiply(_q.setFromAxisAngle(Y_AXIS, P.yaw));
     row.slots[b.def.vol] = b.id; row.filled++;
-    s.shelved[b.id] = 1; s.stats.placed++;
-    G.streak++; s.stats.bestStreak = Math.max(s.stats.bestStreak, G.streak);
-    let gain = 2 + Math.min(3, Math.floor(G.streak / 5));
-    if (manual && TH.Settings.game.exact) gain += 1;
-    if (G.fx.golden > 0) { gain *= 2; G.fx.golden--; }
-    if (b.def.gold) { gain += 15; s.stats.golds++; s.goldFound[b.id] = 1; }
-    TH.Save.earn(gain);
-    const ev = {};
-    if (row.filled === NV) {
-      const cs = row.cs, full = (c) => c.rows.every((r) => r.filled === NV);
-      ev.row = true; s.stats.rows++; TH.Save.earn(15);
-      ev.knack = TH.ABIL.find((a) => a.unlock === s.stats.rows);
-      if (full(cs)) { ev.cs = true; s.stats.cases++; TH.Save.earn(60); if (cases.every((c) => c.wing !== cs.wing || full(c))) { ev.wing = true; s.stats.wings++; TH.Save.earn(250); } }
+    // Putting a book back that was taken down earns nothing: it was paid for the first time.
+    const first = !s.paid[b.id]; s.paid[b.id] = 1; s.shelved[b.id] = 1;
+    let gain = 0;
+    if (first) {
+      s.stats.placed++; G.streak++; s.stats.bestStreak = Math.max(s.stats.bestStreak, G.streak);
+      gain = 2 + Math.min(3, Math.floor(G.streak / 5));
+      if (manual && TH.Settings.game.exact) gain += 1;
+      if (G.fx.golden > 0) { gain *= 2; G.fx.golden--; }
+      if (b.def.gold) { gain += 15; s.stats.golds++; s.goldFound[b.id] = 1; }
+      TH.Save.earn(gain);
     }
-    if (manual) for (const a of TH.ABIL) { if (!TH.abilUnlocked(a) || s.charge[a.id] >= a.need) continue; if (++s.charge[a.id] >= a.need) TH.Audio.play('ready'); }
+    const ev = {};
+    if (row.filled === NV && !s.rowsDone[b.se.id]) {
+      const cs = row.cs, full = (c) => c.rows.every((r) => r.filled === NV);
+      s.rowsDone[b.se.id] = 1; ev.row = true; s.stats.rows++; TH.Save.earn(15);
+      ev.knack = TH.ABIL.find((a) => a.unlock === s.stats.rows);
+      if (full(cs) && !s.casesDone[cs.id]) {
+        s.casesDone[cs.id] = 1; ev.cs = true; s.stats.cases++; TH.Save.earn(60);
+        if (!s.wingsDone[cs.wing] && cases.every((c) => c.wing !== cs.wing || full(c))) { s.wingsDone[cs.wing] = 1; ev.wing = true; s.stats.wings++; TH.Save.earn(250); }
+      }
+    }
+    if (manual && first) for (const a of TH.ABIL) { if (!TH.abilUnlocked(a) || s.charge[a.id] >= a.need) continue; if (++s.charge[a.id] >= a.need) TH.Audio.play('ready'); }
     const to = slotPos(b, new T.Vector3()), streak = G.streak;
     const dur = clamp(b.pos.distanceTo(to) / 7, 0.3, 1.1);
     const go = () => fly(b, to, row.cs.quat.clone(), dur, 0.22, () => land(b, row, gain, streak, ev)), ep = epoch;
     if (delay) { b.vis = false; write(b); setTimeout(() => { if (b.st === 'fly' && ep === epoch) { b.vis = true; handWorld(b.pos); go(); } }, delay * 1000); } else go();
-    refreshHand(); TH.UI.hud(); aimKey = '';
-    if (G.streak === 10 || G.streak === 25 || G.streak === 50 || G.streak === 100) TH.UI.flash(`Streak ×${G.streak}!`, 'good');
+    refreshHand(); syncSave(false); TH.UI.hud(); aimKey = '';
+    if (first && (G.streak === 10 || G.streak === 25 || G.streak === 50 || G.streak === 100)) TH.UI.flash(`Streak ×${G.streak}!`, 'good');
   }
   function land(b, row, gain, streak, ev) {
     const s = S();
@@ -1101,17 +1207,15 @@
       if (!aim || aim.type !== 'row') { TH.Audio.play('deny'); TH.UI.flash('Look at a bookcase first'); return; }
       const room = cap() - G.held.length - pending, cat = aim.cs.cat.id, got = [];
       if (room <= 0) { TH.Audio.play('deny'); TH.UI.flash('Your hands are full'); return; }
-      for (const p of piles) {
-        if (p.wing !== aim.cs.wing) continue;
-        for (let k = p.books.length - 1; k >= 0 && got.length < Math.min(v, room); k--) if (books[p.books[k]].def.cat === cat) { const b = books[p.books[k]]; p.books.splice(k, 1); got.push([b, p]); }
-      }
-      if (!got.length) { TH.Audio.play('deny'); TH.UI.flash('No loose ' + aim.cs.cat.name + ' books left in this room'); return; }
-      const touched = new Set(), ep = epoch;
-      got.forEach(([b, p], k) => {
-        b.pile = null; b.st = 'fly'; pending++; touched.add(p);
-        setTimeout(() => ep === epoch && fly(b, handWorld(new T.Vector3()), b.quat.clone(), 0.45, 0.35, () => { pending--; b.st = 'held'; b.vis = false; write(b); G.held.push(b.id); s.stats.mostHeld = Math.max(s.stats.mostHeld, G.held.length); refreshHand(); TH.UI.hud(); aimKey = ''; TH.Audio.play('pick'); }), k * 70);
+      const want = Math.min(v, room);
+      for (let w = 0; w < NW && got.length < want; w++) { if (!TH.wingOpen(w)) continue; for (let k = loose[w].length - 1; k >= 0 && got.length < want; k--) if (loose[w][k].def.cat === cat && loose[w][k].st === 'loose') got.push(loose[w].splice(k, 1)[0]); }
+      if (!got.length) { TH.Audio.play('deny'); TH.UI.flash('No loose ' + aim.cs.cat.name + ' books left to call'); return; }
+      const ep = epoch, rooms = new Set();
+      got.forEach((b, k) => {
+        rooms.add(b.room); b.st = 'fly'; pending++;
+        setTimeout(() => ep === epoch && fly(b, handWorld(new T.Vector3()), b.quat.clone(), 0.45, 0.35, () => { pending--; b.st = 'held'; b.vis = false; write(b); G.held.push(b.id); s.stats.mostHeld = Math.max(s.stats.mostHeld, G.held.length); refreshHand(); syncSave(false); TH.UI.hud(); aimKey = ''; TH.Audio.play('pick'); }), k * 70);
       });
-      for (const p of touched) { restack(p, false); if (!p.books.length) s.stats.piles++; }
+      for (const w of rooms) settle(w, true);
       s.stats.gatherBest = Math.max(s.stats.gatherBest, got.length);
     } else if (a.id === 'tidy') {
       const list = G.held.slice(0, v);
@@ -1144,9 +1248,10 @@
       const b = books[id], se = b.se;
       if (m.id !== id) { m.id = id; m.pop = 0; }
       inst.setXYZW(i, se.id % ACOLS, Math.floor(se.id / ACOLS), b.def.vol, b.def.gold ? 1 : 0);
+      handPages.setColorAt(i, _c.set(b.def.gold ? '#f7c948' : '#ffffff'));
       m.se = se; m.y = h + se.t / 2; m.yaw = 0.32 + ((i * 37) % 9 - 4) * 0.03; h += se.t;
     });
-    inst.needsUpdate = true;
+    inst.needsUpdate = true; if (handPages.instanceColor) handPages.instanceColor.needsUpdate = true;
     handGroup.userData.h = h;
   }
   function updateHand(dt) {
@@ -1259,14 +1364,15 @@
 
   // ---------- hooks for the automated test ----------
   G.debug = {
-    books, piles, cases, gates, marks, P,
+    books, loose, tables, cases, gates, marks, P,
     lookAt(x, y, z) { const dx = x - P.x, dy = y - EYE, dz = z - P.z; P.yaw = Math.atan2(-dx, -dz); P.pitch = Math.atan2(dy, Math.hypot(dx, dz)); },
     stand(x, z) { P.x = x; P.z = z; },
     slot(id) { return slotPos(books[id], new T.Vector3()); },
     flush() { for (const id of G.held.slice()) shelve(books[id], true); },
+    busy() { return anims.length; },
     // shelve one loose book directly (skips walking), used to fast-forward
     auto(wing) {
-      for (const p of piles) { if (wing != null && p.wing !== wing) continue; if (p.books.length) { const b = takeFromPile(p, p.books.length - 1); shelve(b, true); return true; } }
+      for (let w = 0; w < NW; w++) { if (wing != null && w !== wing) continue; const b = loose[w].find((x) => x.st === 'loose'); if (b) { takeLoose(b); shelve(b, true); return true; } }
       return false;
     }
   };

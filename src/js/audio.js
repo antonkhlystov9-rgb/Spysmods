@@ -91,6 +91,7 @@
       noise(t, 0.07, 0.2, 'lowpass', 420);
     },
     wrong() { const t = now(); tone(196, t, 0.2, 'sine', 0.22, null, 0.01, 130); tone(147, t + 0.02, 0.22, 'triangle', 0.1, null, 0.01, 98); },
+    drop() { const t = now(); tone(150, t, 0.13, 'sine', 0.17, null, 0.005, 72); noise(t, 0.06, 0.09, 'lowpass', 520); },
     step() { const f = 78 + Math.random() * 18; tone(f, now(), 0.1, 'sine', 0.055, null, 0.006, f * 0.6); },
     bin() { arp([72, 76, 79, 84], 0.07, 0.35, 'triangle', 0.16); },
     level() { arp([60, 64, 67, 72, 76, 79, 84], 0.09, 0.7, 'triangle', 0.16); const t = now() + 0.7; [60, 64, 67, 72].forEach((n) => tone(midi(n), t, 1.6, 'sine', 0.09, null, 0.05)); },

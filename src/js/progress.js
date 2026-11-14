@@ -7,7 +7,7 @@
   // ---------- knacks: active abilities, unlocked by finishing shelf rows ----------
   TH.ABIL = [
     { id: 'gather', name: 'Call the Strays', short: 'Call', bind: 'ability1', icon: 'magnet', need: 12, unlock: 2, vals: [3, 5, 8],
-      desc: (v) => `Look at a bookcase: up to ${v} of its books fly out of the piles and into your hands.` },
+      desc: (v) => `Look at a bookcase: up to ${v} of its loose books fly into your hands from wherever they are lying.` },
     { id: 'tidy', name: 'Tidy Hands', short: 'Tidy', bind: 'ability2', icon: 'wind', need: 16, unlock: 8, vals: [3, 6, 12],
       desc: (v) => `Up to ${v} books in your hands shelve themselves, wherever they belong.` },
     { id: 'golden', name: 'Golden Hour', short: 'Golden', bind: 'ability3', icon: 'sun', need: 22, unlock: 18, vals: [12, 20, 30],
@@ -88,7 +88,7 @@
   A('call5', 'Here, Kitty', 'Call 5 or more books at once.', 60, (s) => [s.stats.gatherBest, 5]);
   A('abmax', 'Fully Equipped', 'Raise every knack to level 3.', 200, (s) => [Object.values(s.abil).filter((l) => l >= 3).length, 4]);
   A('strap', 'Armful', 'Carry 12 books at once.', 60, (s) => [s.stats.mostHeld, 12]);
-  A('piles', 'Clear the Floor', 'Empty 40 piles.', 60, (s) => [s.stats.piles, 40]);
+  A('piles', 'Clear the Floor', 'Pick 300 books up off the floor.', 60, (s) => [s.stats.piles, 300]);
   A('walk1', 'Stretching Your Legs', 'Walk 1 kilometre (in metres).', 30, (s) => [Math.floor(s.stats.metres), 1000]);
   A('walk5', 'Well-Worn Carpet', 'Walk 5 kilometres (in metres).', 100, (s) => [Math.floor(s.stats.metres), 5000]);
   A('hour', 'Night Shift', 'Spend an hour in the library (in minutes).', 100, (s) => [Math.floor(s.stats.playTime / 60), 60]);
