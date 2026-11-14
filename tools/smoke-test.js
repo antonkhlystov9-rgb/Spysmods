@@ -21,6 +21,7 @@ const { chromium } = require('playwright');
   const frames = (n = 3) => ev((k) => new Promise((res) => { let i = 0; const f = () => (++i >= k ? res() : requestAnimationFrame(f)); requestAnimationFrame(f); }), n);
   const landed = async () => { for (let i = 0; i < 400; i++) { if (!(await ev(() => TH.Game.debug.busy() || TH.Game.debug.books.some((b) => b.st === 'fly')))) break; await wait(100); } await frames(2); };
 
+  page.setDefaultTimeout(180000);            // software rendering can take most of a minute to build the library
   await page.goto('file://' + path.resolve(__dirname, '..', 'src', 'index.html'));
   await wait(900);
   const info = await ev(() => ({ books: TH.BOOKS.length, series: TH.SERIES.length, cats: TH.CATS.length, titles: new Set(TH.BOOKS.map(TH.bookTitle)).size, names: new Set(TH.SERIES.map((s) => s.name)).size, ach: TH.ACH.length, pre: TH.shelvedCount() }));
@@ -79,7 +80,7 @@ const { chromium } = require('playwright');
 
   // --- closing the game right now loses nothing: every loose book, the one in your hand, and where you stand ---
   const before = await ev(() => { const D = TH.Game.debug; return { pos: D.books.map((b) => (b.st === 'loose' ? [b.lx, b.lz, b.base > 0.1] : null)), x: D.P.x, z: D.P.z }; });
-  await page.reload(); await wait(900);
+  await page.reload({ timeout: 180000 }); await wait(900);
   const same = await ev((bf) => { const D = TH.Game.debug; let bad = 0; D.books.forEach((b, i) => { const p = bf.pos[i]; if (!p) { if (b.st === 'loose') bad++; return; } if (b.st !== 'loose' || Math.abs(b.lx - p[0]) > 0.002 || Math.abs(b.lz - p[1]) > 0.002 || (b.base > 0.1) !== p[2]) bad++; }); return bad; }, before);
   assert(same === 0, 'after closing and reopening, every loose book lies exactly where it was left');
   await page.click('[data-act="enter"]'); await wait(700);
@@ -188,7 +189,7 @@ const { chromium } = require('playwright');
 
   // --- persistence, reshuffle ---
   await ev(() => TH.Save.flush());
-  await page.reload(); await wait(900);
+  await page.reload({ timeout: 180000 }); await wait(900);
   assert(await ev(() => TH.shelvedCount() === 1152 && TH.Save.data.upg.satchel === 1 && TH.Settings.controls.keys.grab === 'KeyG'), 'progress and settings persist after reload');
   await page.click('[data-act="go"][data-to="settings"]'); await page.click('[data-act="reshuffle"]'); await page.click('[data-act="yes"]'); await wait(400);
   assert(await ev(() => TH.shelvedCount() === 0 && TH.Game.debug.loose.every((l) => l.length === 288) && TH.Save.data.upg.satchel === 1 && TH.Save.data.stats.rounds === 1), 'reshuffle puts every book back on the floor but keeps upgrades');
